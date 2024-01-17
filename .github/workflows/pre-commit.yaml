@@ -8,7 +8,7 @@ jobs:
     runs-on: self-hosted
     container: kiwicom/pre-commit
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v2
       - uses: actions/setup-python@v3
       - name: Install git
         run: apt-get update && apt-get install -y git
