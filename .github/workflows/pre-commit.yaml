@@ -6,6 +6,8 @@ on:
 jobs:
   pre-commit:
     runs-on: self-hosted
+    container:
+      image: ubuntu:22.04
     steps:
       - name: Install sqlite3
         run: apt-get update && apt-get install sqlite3 -y
@@ -20,4 +22,7 @@ jobs:
       - uses: actions/setup-python@v3
       - name: ls
         run: ls -la
-      - uses: pre-commit/action@v3.0.0
+      - name: Install pre-commit
+        run: pip install pre-commit
+      - name: Run pre-commit
+        run: pre-commit run --show-diff-on-failure --color=always --all-files
