@@ -9,12 +9,14 @@ jobs:
     container:
       image: ubuntu:22.04
     steps:
+      - name: Install sqlite3
+        run: apt-get update && apt-get install -y sqlite3
       - uses: actions/checkout@v4
         with:
           path: folder
       - uses: actions/setup-python@v3
       - name: ls
-        run: ls -la
+        run: ls -la folder/
       - name: Install pre-commit
         run: pip install pre-commit
       - name: Run pre-commit
