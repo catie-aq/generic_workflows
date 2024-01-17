@@ -6,7 +6,7 @@ on:
 jobs:
   pre-commit:
     runs-on: self-hosted
-    container: fxinnovation/pre-commit
+    container: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v3
