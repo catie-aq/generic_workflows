@@ -11,7 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          path: app/
+          path: folder
       - uses: actions/setup-python@v3
       - name: ls
         run: ls -la
@@ -19,6 +19,6 @@ jobs:
         run: pip install pre-commit
       - name: Run pre-commit
         run: |
-          cd app/ && 
+          cd folder/ \
           && pre-commit install \
           && pre-commit run --color=always --all-files
