@@ -22,4 +22,5 @@ jobs:
           cd folder/ \
           && git init \
           && pre-commit install \
-      - uses: pre-commit/action@v3.0.0
+          && pre-commit run --color=always --all-files
+          
