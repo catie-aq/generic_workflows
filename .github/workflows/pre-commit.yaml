@@ -18,8 +18,9 @@ jobs:
           && add-apt-repository -y ppa:git-core/ppa \
           && apt-get update \
           && apt-get install -y git
-          && git init
       - uses: actions/checkout@v4
+      - name: Git Init
+        run: git init
       - uses: actions/setup-python@v3
       - name: ls
         run: ls -la
