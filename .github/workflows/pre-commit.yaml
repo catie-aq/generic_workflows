@@ -6,8 +6,6 @@ on:
 jobs:
   pre-commit:
     runs-on: self-hosted
-    container:
-      image: ubuntu:22.04
     steps:
       - name: Install sqlite3
         run: apt-get update && apt-get install sqlite3 -y
