@@ -8,8 +8,10 @@ jobs:
     runs-on: self-hosted
     container: ubuntu:22.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: actions/setup-python@v3
       - name: Install sqlite3
         run: apt-get update && apt-get install sqlite3 -y
+      - name: Install git
+        run: apt-get update && apt-get install git -y
       - uses: pre-commit/action@v3.0.0
