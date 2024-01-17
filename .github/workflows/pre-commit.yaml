@@ -19,8 +19,8 @@ jobs:
           && apt-get update \
           && apt-get install -y git
       - uses: actions/checkout@v4
-      - name: Git Init
-        run: git init
+        with:
+          repository: app/
       - uses: actions/setup-python@v3
       - name: ls
         run: ls -la
@@ -28,5 +28,6 @@ jobs:
         run: pip install pre-commit
       - name: Run pre-commit
         run: |
-          pre-commit install \
+          cd app/ && 
+          && pre-commit install \
           && pre-commit run --color=always --all-files
