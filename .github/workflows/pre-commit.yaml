@@ -6,7 +6,7 @@ on:
 jobs:
   pre-commit:
     runs-on: self-hosted
-    container: ubuntu:20.04
+    container: python:3.10
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v3
