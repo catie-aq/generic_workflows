@@ -6,7 +6,7 @@ on:
 jobs:
   pre-commit:
     runs-on: self-hosted
-    container: ubuntu:22.04
+    container: kiwicom/pre-commit
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v3
