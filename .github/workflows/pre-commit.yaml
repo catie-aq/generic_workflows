@@ -9,8 +9,8 @@ jobs:
     container:
       image: ubuntu:22.04
     steps:
-      - name: Install sqlite3
-        run: apt-get update && apt-get install -y sqlite3
+      - name: Install sqlite3 and git
+        run: apt-get update && apt-get install -y sqlite3 && apt-get install -y git
       - uses: actions/checkout@v4
         with:
           path: folder
