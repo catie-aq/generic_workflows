@@ -27,4 +27,6 @@ jobs:
       - name: Install pre-commit
         run: pip install pre-commit
       - name: Run pre-commit
-        run: pre-commit run --color=always --all-files
+        run: |
+          pre-commit install \
+          && pre-commit run --color=always --all-files
