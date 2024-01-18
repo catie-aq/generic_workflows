@@ -20,5 +20,5 @@ jobs:
       - name: Run pre-commit
         run: |
           cd folder/ \
-          pre-commit run --color=always --all-files
+          && pre-commit run --color=always --all-files
           
