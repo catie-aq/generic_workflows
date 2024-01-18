@@ -21,6 +21,5 @@ jobs:
         run: |
           cd folder/ \
           && git init \
-          && pre-commit install \
           && pre-commit run --color=always --all-files
           
