@@ -12,13 +12,10 @@ jobs:
       - name: Install sqlite3 and git
         run: apt-get update && apt-get install -y sqlite3 && apt-get install -y git
       - uses: actions/checkout@v4
-        with:
-          path: folder
       - uses: actions/setup-python@v3
       - name: Install pre-commit
         run: pip install pre-commit
       - name: Run pre-commit
         run: |
-          cd folder/ \
           && pre-commit run --color=always --all-files
           
