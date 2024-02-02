@@ -23,7 +23,7 @@ jobs:
       - name: Install cookiecutter
         run: |
           pip install cookiecutter
-      - name: Build Zephyr Application
+      - name: Run cookiecutter with config file
         if: ${{ inputs.config-file }}
         run: cookiecutter . --no-input --config-file ${{ inputs.config-file }} 
       - name: Build Zephyr Application
