@@ -9,6 +9,7 @@ on:
       python-version:
         required: false
         type: string
+        default: "3.10"
 
 
 permissions: read-all
