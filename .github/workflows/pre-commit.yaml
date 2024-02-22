@@ -5,7 +5,8 @@ on:
 
 jobs:
   pre-commit:
-    runs-on: self-hosted
+    runs-on:
+      group: default
     container:
       image: ubuntu:22.04
     steps:
