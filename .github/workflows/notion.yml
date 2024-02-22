@@ -20,7 +20,8 @@ on:
 
 jobs:
   sync_readme_to_notion:
-    runs-on: self-hosted
+    runs-on:
+      group: default
     name: Checkout and upload Readme to Notion
     container:
       image: ubuntu:22.04
