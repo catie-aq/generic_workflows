@@ -48,4 +48,5 @@ jobs:
           commit-message: "Update pre-commit hooks"
           labels: dependencies
           reviewers: ${{ github.actor }}
+          delete-branch: true
           body: Update versions of pre-commit hooks to latest version.
