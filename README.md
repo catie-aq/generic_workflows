@@ -5,7 +5,15 @@ le cadre d'Actions Github.
 
 ## Workflows Disponibles
 
-TODO
+### Auto Update Pre Commit
+
+Ce workflow permet de mettre à jour automatiquement la version des hooks pre-commit dans le fichier `.pre-commit-config.yaml` de votre dépôt.
+
+Paramètres :
+
+- `path` : le chemin du dossier où se trouve le fichier `.pre-commit-config.yaml` (par défaut : `.`)
+
+## Utilisation
 
 Vous pouvez utiliser ce workflow dans votre dépôt en ajoutant le bloc de code suivant à votre fichier `.github/workflows/<name>.yml` :
 
