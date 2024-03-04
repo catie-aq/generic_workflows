@@ -32,12 +32,18 @@ jobs:
       - name: Install Cruft
         run: pip3 install cruft
 
-      - name: Install Git
-        run: apt-get update && apt-get install -y git
-      
       - uses: actions/checkout@v4
         with:
           path: "folder"
+      
+      - name: Remove change auth method
+        run: |
+            sed -i 's/https:\/\/github.com/git@github.com:/' folder/.cruft.json
+
+
+      - name: Install Git
+        run: apt-get update && apt-get install -y git
+      
 
       - name: Setup permission
         run: |
@@ -69,10 +75,6 @@ jobs:
         run: |
           cd folder
           cruft update --skip-apply-ask --refresh-private-variables
-
-      - name: Remove change auth method
-        run: |
-            sed -i 's/https:\/\/github.com/git@github.com:/' folder/.cruft.json
 
       - name: Create pull request
         if: steps.check.outputs.has_changes == '1'
