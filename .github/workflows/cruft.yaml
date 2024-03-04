@@ -7,7 +7,6 @@ on:
   workflow_call:
     secrets:
       token:
-        type: string
         description: "Personal Access Token"
         required: true
 
