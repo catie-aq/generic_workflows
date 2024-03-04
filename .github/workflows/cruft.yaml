@@ -49,6 +49,7 @@ jobs:
         run: |
           git config --global credential.helper store
           echo "https://$GITHUB_ACTOR:${{ secrets.token }}@github.com" >~/.git-credentials
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
       - name: Change auth method
         run: |
