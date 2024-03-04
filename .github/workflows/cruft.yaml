@@ -32,28 +32,20 @@ jobs:
       - name: Install Cruft
         run: pip3 install cruft
 
-      - uses: actions/checkout@v4
-        with:
-          path: "folder"
       
-      - name: Remove change auth method
-        run: |
-            sed -i 's/https:\/\/github.com/git@github.com:/' folder/.cruft.json
-
-
       - name: Install Git
         run: apt-get update && apt-get install -y git
       
+    
+      - uses: actions/checkout@v4
+        with:
+          path: "folder"
 
       - name: Setup permission
         run: |
           git config --global credential.helper store
           echo "https://$GITHUB_ACTOR:${{ secrets.token }}@github.com" >~/.git-credentials
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
-
-      - name: Change auth method
-        run: |
-          sed -i 's/git@github.com:/https:\/\/github.com\//' folder/.cruft.json
 
       - name: Check if update is available
         continue-on-error: false
