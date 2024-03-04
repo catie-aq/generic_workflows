@@ -21,11 +21,6 @@ jobs:
             branch: cruft/update
             commit-message: "Accept new Cruft update"
             title: New updates detected with Cruft
-          - add-paths: .cruft.json
-            body: Use this to reject the changes in this repository.
-            branch: cruft/reject
-            commit-message: "Reject new Cruft update"
-            title: Reject new updates detected with Cruft
     steps:
       - uses: actions/checkout@v3
 
@@ -35,6 +30,9 @@ jobs:
 
       - name: Install Cruft
         run: pip3 install cruft
+
+      - name: Install Git
+        run: apt-get update && apt-get install -y git
 
       - name: Check if update is available
         continue-on-error: false
@@ -54,7 +52,7 @@ jobs:
       - name: Run update if available
         if: steps.check.outputs.has_changes == '1'
         run: |
-          git config --global user.email "you@example.com"
+          git config --global user.email "noreply@github.com"
           git config --global user.name "GitHub"
 
           cruft update --skip-apply-ask --refresh-private-variables
