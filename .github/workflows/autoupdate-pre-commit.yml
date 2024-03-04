@@ -5,8 +5,9 @@ on:
     inputs:
         path:
             type: string
-            required: true
+            required: false
             description: "Path to the folder containing the package to update"
+            default: "."
 
 permissions:
   contents: write
