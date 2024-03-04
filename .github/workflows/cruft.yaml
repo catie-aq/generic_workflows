@@ -17,7 +17,6 @@ jobs:
       matrix:
         include:
           - add-paths: .
-            body: Use this to merge the changes to this repository.
             branch: cruft/update
             commit-message: "Accept new Cruft update"
             title: New updates detected with Cruft
@@ -49,12 +48,15 @@ jobs:
 
           echo "has_changes=$CHANGES" >> "$GITHUB_OUTPUT"
 
+      - name: Setup permission
+        run: |
+          git config --global credential.helper store
+          echo "https://$GITHUB_ACTOR:${{ secrets.GITHUB_TOKEN }}@github.com" >~/.git-credentials
+      
+
       - name: Run update if available
         if: steps.check.outputs.has_changes == '1'
         run: |
-          git config --global user.email "noreply@github.com"
-          git config --global user.name "GitHub"
-
           cruft update --skip-apply-ask --refresh-private-variables
           git restore --staged .
 
