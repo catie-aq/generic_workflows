@@ -44,6 +44,11 @@ jobs:
           git config --global credential.helper store
           echo "https://$GITHUB_ACTOR:${{ secrets.token }}@github.com" >~/.git-credentials
 
+      - name: Change auth method
+        run: |
+          sed -i 's/git@github:/https:\/\/github.com\//' folder/.cruft.json
+        
+
       - name: Check if update is available
         continue-on-error: false
         id: check
@@ -65,7 +70,6 @@ jobs:
         run: |
           cd folder
           cruft update --skip-apply-ask --refresh-private-variables
-          git restore --staged .
 
       - name: Create pull request
         if: steps.check.outputs.has_changes == '1'
