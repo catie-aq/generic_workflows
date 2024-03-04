@@ -1,0 +1,35 @@
+name: "Semver comparaison"
+description: "Compare last semver of GitHub tag with input version. Return a boolean to indicate if the version should be bumped."
+
+inputs:
+  version:
+    description: "Current version"
+    required: true
+
+outputs:
+  bump:
+    description: "Boolean to indicate if the version should be bumped"
+    value: ${{ steps.compare.outputs.bump }}
+
+runs:
+  using: "composite"
+  steps:
+      - name: 'Get Previous tag'
+        id: previoustag
+        uses: actions-ecosystem/action-get-latest-tag@v1
+        with:
+          semver_only: true
+          initial_version: '0.0.0'
+      - name: 'Compare Versions'
+        shell: bash
+        id: compare
+        run: |
+          PREVIOUS_TAG=$(echo ${{ steps.previoustag.outputs.tag }} | sed 's/\.//g')
+          CURRENT_VERSION=$(echo ${{ steps.currentversion.outputs.version }} | sed 's/\.//g')
+          echo "Previous tag: $PREVIOUS_TAG"
+          echo "Current version: $CURRENT_VERSION"
+          if [ $PREVIOUS_TAG -lt $CURRENT_VERSION ]; then
+            echo ::set-output name=bump::true
+          else
+            echo ::set-output name=bump::false
+          fi
