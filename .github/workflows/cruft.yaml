@@ -80,6 +80,7 @@ jobs:
         with:
           path: folder
           token: ${{ secrets.GITHUB_TOKEN }}
+          author: "GitHub <noreply@github.com>"
           add-paths: ${{ matrix.add-paths }}
           commit-message: ${{ matrix.commit-message }}
           branch: ${{ matrix.branch }}
