@@ -46,6 +46,7 @@ jobs:
           branch: update/pre-commit-hooks
           title: Update pre-commit hooks
           commit-message: "Update pre-commit hooks"
+          author: GitHub <noreply@github.com>
           labels: dependencies
           reviewers: ${{ github.actor }}
           delete-branch: true
