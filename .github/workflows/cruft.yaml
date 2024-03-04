@@ -25,7 +25,7 @@ jobs:
             commit-message: "Accept new Cruft update"
             title: New updates detected with Cruft
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v4
         with:
@@ -36,6 +36,11 @@ jobs:
 
       - name: Install Git
         run: apt-get update && apt-get install -y git
+
+      - name: Setup permission
+        run: |
+          git config --global credential.helper store
+          echo "https://$GITHUB_ACTOR:${{ secrets.token }}@github.com" >~/.git-credentials
 
       - name: Check if update is available
         continue-on-error: false
@@ -51,12 +56,6 @@ jobs:
           fi
 
           echo "has_changes=$CHANGES" >> "$GITHUB_OUTPUT"
-
-      - name: Setup permission
-        run: |
-          git config --global credential.helper store
-          echo "https://$GITHUB_ACTOR:${{ secrets.token }}@github.com" >~/.git-credentials
-      
 
       - name: Run update if available
         if: steps.check.outputs.has_changes == '1'
