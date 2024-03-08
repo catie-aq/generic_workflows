@@ -1,0 +1,53 @@
+name: Publish new tag and pre-release when version is bumped
+
+on:
+  workflow_call:
+    inputs:
+      image:
+        type: string
+        description: 'The name of the image to build'
+        required: true
+      extra_cmd:
+        type: string
+        description: 'Extra command to run before the tag. To install dependencies for example.'
+        required: false
+      version_cmd:
+        type: string
+        description: 'Command to get the current version of a package'
+        required: true
+        
+
+jobs:
+  bump-tag:
+    if: github.actor != 'dependabot[bot]'
+    runs-on:
+      group: default
+    container:
+      image: ${{ inputs.image }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install dependencies
+        if: ${{ inputs.extra_cmd }}
+        run: |
+          ${{ inputs.extra_cmd }}  
+      - name: Get current version
+        id: get_version
+        run: |
+          echo ::set-output name=version::$(${{ inputs.version_cmd }})
+      - name: Check version
+        id: semver
+        uses: catie-aq/generic_workflows/semver@main
+        with:
+          version: ${{ steps.get_version.outputs.version }}
+      - name: Bump version and push tag
+        if: ${{ steps.semver.outputs.bump == 'true' }}
+        id: tag_version
+        uses: mathieudutour/github-tag-action@v6.1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          custom_tag: ${{ steps.get_version.outputs.version }}
+          tag_prefix: ""
+    outputs:
+      bump: ${{ steps.semver.outputs.bump }}
+      version: ${{ steps.get_version.outputs.version }}
