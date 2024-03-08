@@ -15,6 +15,13 @@ on:
         type: string
         description: 'Command to get the current version of a package'
         required: true
+    outputs:
+      bump:
+        description: 'Whether the version was bumped or not'
+        value: ${{ jobs.bump-tag.outputs.bump }}
+      version:
+        description: 'The new version'
+        value: ${{ jobs.bump-tag.outputs.version }}
         
 
 jobs:
