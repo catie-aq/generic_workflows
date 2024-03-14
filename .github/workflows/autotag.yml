@@ -50,7 +50,7 @@ jobs:
       - name: Bump version and push tag
         if: ${{ steps.semver.outputs.bump == 'true' }}
         id: tag_version
-        uses: mathieudutour/github-tag-action@v6.1
+        uses: mathieudutour/github-tag-action@v6.2
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           custom_tag: ${{ steps.get_version.outputs.version }}
