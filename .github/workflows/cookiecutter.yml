@@ -27,7 +27,7 @@ jobs:
           pip install cookiecutter
       - name: Run cookiecutter with config file
         if: ${{ inputs.config-file }}
-        run: cookiecutter . --no-input --config-file ${{ inputs.config-file }} 
+        run: cookiecutter . --no-input --config-file ${{ inputs.config-file }}
       - name: Run cookiecutter
         if: ${{ !inputs.config-file }}
         run: cookiecutter . --no-input
