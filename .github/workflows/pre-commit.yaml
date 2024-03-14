@@ -20,4 +20,3 @@ jobs:
         run: |
           cd folder/ \
           && pre-commit run --color=always --all-files
-

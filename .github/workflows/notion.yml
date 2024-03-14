@@ -35,4 +35,3 @@ jobs:
           file-path: ${{ inputs.file-path }}
           notion-token: ${{ secrets.notion-token }}
           notion-page-id: ${{ inputs.notion-page-id }}
-

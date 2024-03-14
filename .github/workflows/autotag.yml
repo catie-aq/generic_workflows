@@ -22,7 +22,7 @@ on:
       version:
         description: 'The new version'
         value: ${{ jobs.bump-tag.outputs.version }}
-        
+
 
 jobs:
   bump-tag:
@@ -37,7 +37,7 @@ jobs:
       - name: Install dependencies
         if: ${{ inputs.extra_cmd }}
         run: |
-          ${{ inputs.extra_cmd }}  
+          ${{ inputs.extra_cmd }}
       - name: Get current version
         id: get_version
         run: |
