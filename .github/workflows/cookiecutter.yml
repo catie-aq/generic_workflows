@@ -21,7 +21,7 @@ jobs:
     container:
       image: python:${{ inputs.python-version }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install cookiecutter
         run: |
           pip install cookiecutter
