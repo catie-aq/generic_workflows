@@ -6,7 +6,7 @@ on:
 jobs:
   pre-commit:
     runs-on:
-      group: 'default'
+      group: default
     container:
       image: cicirello/pyaction:4.29
     steps:
