@@ -1,0 +1,51 @@
+name: Docker Build and push to Nexus
+
+on:
+  workflow_call:
+    inputs:
+      nexus_host:
+        type: string
+        description: "Nexus IP"
+        required: false
+        default: 192.168.63.151:50443
+    secrets:
+      build_args:
+        description: "Build Args for Dockerfile"
+        required: false
+      nexus_username:
+        description: "Nexus Username"
+        required: true
+      nexus_password:
+        description: "Nexus Password"
+        required: true
+
+jobs:
+  build:
+    runs-on:
+      group: Default
+    container: docker:dind
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: "Get Latest tag"
+        id: latest_tag
+        uses: actions-ecosystem/action-get-latest-tag@v1
+        with:
+          semver_only: true
+          initial_version: "0.0.0"
+
+      - name: "Login to Nexus Registry"
+        uses: docker/login-action@v1
+        with:
+          registry: ${{ inputs.nexus_host }}
+          username: ${{ secrets.NEXUS_USERNAME }}
+          password: ${{ secrets.NEXUS_PASSWORD }}
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: true
+          tags: 192.168.63.151:50443/${{ github.event.repository.name }}:${{ steps.latest_tag.outputs.tag }}
+          build-args: ${{ secrets.build_args }}
