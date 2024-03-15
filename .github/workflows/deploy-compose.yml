@@ -1,0 +1,48 @@
+name: Docker Compose Deploy
+
+on:
+  workflow_call:
+    inputs:
+      docker_host:
+        type: string
+        description: "Docker Host"
+        required: false
+        default: "tcp://100.121.122.93:2375"
+      extra_args:
+        type: string
+        description: "Extra Arguments for up command"
+        required: false
+        default: ""
+    secrets:
+      env_variables:
+        description: "Environment Variables"
+        required: false
+      TS_OAUTH_CLIENT_ID:
+        description: "Tailscale OAuth Client ID"
+      TS_OAUTH_SECRET:
+        description: "Tailscale OAuth Secret"
+
+jobs:
+  deploy:
+    runs-on: ROS2
+    container:
+      image: ubuntu:22.04
+
+    steps:
+      - name: Install sudo, curl, git, docker-compose
+        run: apt update && apt install -y sudo curl git docker-compose
+
+      - name: Tailscale
+        uses: tailscale/github-action@v2
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:server
+          tailscaled-args: --tun=userspace-networking
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Docker compose
+        run: |
+          ${{ secrets.env_variables }} DOCKER_HOST=${{ inputs.docker_host }} docker-compose up -d --build --force-recreate
