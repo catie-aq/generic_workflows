@@ -29,7 +29,7 @@ jobs:
       - name: checkout
         uses: "actions/checkout@8410ad0602e1e429cee44a835ae9f77f654a6694"
       - name: Upload to Notion
-        uses: agonzalezl/readme-to-notion-action@88b6cb8eea354ac61c589f540e40cacadf0c8ecb
+        uses: agonzalezl/readme-to-notion-action@ec09b61772638fea9c07d08def64aa959c80d902
         with:
           static-top-text: "_This documentation is auto-generated from [${{ github.repository }}/${{inputs.file-path}}](https://github.com/${{ github.repository }})_"
           file-path: ${{ inputs.file-path }}
