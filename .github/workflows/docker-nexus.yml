@@ -21,8 +21,7 @@ on:
 
 jobs:
   build:
-    runs-on:
-      group: Default
+    runs-on: self-hosted
     container: docker:dind
     steps:
       - name: Checkout repository
