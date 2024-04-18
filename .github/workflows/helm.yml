@@ -40,6 +40,6 @@ jobs:
       - name: Deploy
         uses: WyriHaximus/github-action-helm3@v3
         with:
-          exec: helm upgrade ${inputs.release_name} ${inputs.chart_path} --install --wait --atomic --namespace=${inputs.namespace} --values=${inputs.values_file}
+          exec: helm upgrade ${{inputs.release_name}} ${{inputs.chart_path}} --install --wait --atomic --namespace=${{inputs.namespace}} --values=${{inputs.values_file}}
           kubeconfig: "${{ secrets.KUBECONFIG }}"
           overrule_existing_kubeconfig: "true"
