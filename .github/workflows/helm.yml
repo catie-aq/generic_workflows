@@ -22,6 +22,11 @@ on:
         description: "Values File"
         required: false
         default: values.yaml
+      extra_args:
+        type: string
+        description: "Extra Arguments"
+        required: false
+        default: ""
     secrets:
       kubeconfig:
         description: "Kubeconfig"
@@ -40,6 +45,6 @@ jobs:
       - name: Deploy
         uses: WyriHaximus/github-action-helm3@v3
         with:
-          exec: helm upgrade --recreate-pods ${{inputs.release_name}} ${{inputs.chart_path}} --install --wait --atomic --namespace=${{inputs.namespace}} --values=${{inputs.values_file}} --force --create-namespace
+          exec: helm upgrade ${{inputs.extra_args}} ${{inputs.release_name}} ${{inputs.chart_path}} --install --wait --atomic --namespace=${{inputs.namespace}} --values=${{inputs.values_file}} --force --create-namespace
           kubeconfig: "${{ secrets.KUBECONFIG }}"
           overrule_existing_kubeconfig: "true"
