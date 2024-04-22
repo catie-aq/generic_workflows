@@ -20,7 +20,7 @@ jobs:
     container:
       image: ubuntu:22.04
     steps:
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v2
 
       - name: Install sqlite3 and git
         run: |
