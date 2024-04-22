@@ -8,6 +8,11 @@ on:
         description: "Nexus IP"
         required: false
         default: 192.168.63.151:50443
+      workflow_host:
+        type: string
+        description: "Github Action runner tag"
+        required: false
+        default: self-hosted
     secrets:
       build_args:
         description: "Build Args for Dockerfile"
@@ -21,7 +26,7 @@ on:
 
 jobs:
   build:
-    runs-on: self-hosted
+    runs-on: ${{ inputs.workflow_host }}
     container: docker:dind
     steps:
       - name: Checkout repository
