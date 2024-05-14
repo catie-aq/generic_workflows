@@ -24,7 +24,8 @@ on:
 
 jobs:
   deploy:
-    runs-on: ROS2
+    runs-on:
+      group: default
     container:
       image: ubuntu:22.04
 
