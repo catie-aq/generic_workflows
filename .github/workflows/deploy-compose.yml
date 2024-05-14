@@ -24,8 +24,7 @@ on:
 
 jobs:
   deploy:
-    runs-on:
-      group: default
+    runs-on: elegantencoder
     container:
       image: ubuntu:22.04
 
