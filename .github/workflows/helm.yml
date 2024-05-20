@@ -27,6 +27,11 @@ on:
         description: "Extra Arguments"
         required: false
         default: ""
+      submodules:
+        type: string
+        description: "Fetch submodules in checkout ? (true/recursive/false)"
+        required: false
+        default: "false"
     secrets:
       kubeconfig:
         description: "Kubeconfig"
@@ -42,6 +47,8 @@ jobs:
           apt update
           apt install -y curl
       - uses: actions/checkout@v3
+        with:
+          submodules: ${{inputs.submodules}}
       - name: Deploy
         uses: WyriHaximus/github-action-helm3@v3
         with:

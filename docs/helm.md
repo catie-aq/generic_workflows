@@ -2,18 +2,19 @@
 
 ## Entrées
 
-| nom             | description                          | requis | par défaut |
-| --------------- | ------------------------------------ | ------ | ---------- |
-| `release_name`  | Nom de la release                    | `true` |            |
-| `namespace`     | Namespace                            | `false` | `default`  |
-| `chart_path`    | Chemin du chart                      | `false` | `.`        |
-| `values_file`   | Fichier de valeurs                   | `false` | `values.yaml` |
+| nom            | description        | requis  | par défaut    |
+| -------------- | ------------------ | ------- | ------------- |
+| `release_name` | Nom de la release  | `true`  |               |
+| `namespace`    | Namespace          | `false` | `default`     |
+| `chart_path`   | Chemin du chart    | `false` | `.`           |
+| `values_file`  | Fichier de valeurs | `false` | `values.yaml` |
+| `submodule`    | Fetch submodule ?  | `false` | `false`       |
 
 ## Secrets
 
-| nom             | description                          |
-| --------------- | ------------------------------------ |
-| `kubeconfig`    | Kubeconfig                           |
+| nom          | description |
+| ------------ | ----------- |
+| `kubeconfig` | Kubeconfig  |
 
 ## Jobs
 
