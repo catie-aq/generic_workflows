@@ -28,6 +28,9 @@ on:
       nexus_password:
         description: "Nexus Password"
         required: true
+      PAT:
+        description: "Personal Access Token"
+        required: false
 
 jobs:
   build:
@@ -38,6 +41,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: ${{ inputs.submodules }}
+          token: ${{ secrets.PAT }}
 
       - name: "Get Latest tag"
         id: latest_tag
