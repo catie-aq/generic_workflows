@@ -46,7 +46,7 @@ jobs:
         run: |
           apt update
           apt install -y curl
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: ${{inputs.submodules}}
       - name: Deploy
