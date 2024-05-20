@@ -50,7 +50,7 @@ jobs:
         with:
           submodules: ${{inputs.submodules}}
       - name: Deploy
-        uses: WyriHaximus/github-action-helm3@v3
+        uses: WyriHaximus/github-action-helm3@v4
         with:
           exec: helm upgrade ${{inputs.extra_args}} ${{inputs.release_name}} ${{inputs.chart_path}} --install --wait --atomic --namespace=${{inputs.namespace}} --values=${{inputs.values_file}} --force --create-namespace
           kubeconfig: "${{ secrets.KUBECONFIG }}"
