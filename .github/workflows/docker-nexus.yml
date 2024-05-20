@@ -13,6 +13,11 @@ on:
         description: "Github Action runner tag"
         required: false
         default: self-hosted
+      submodules:
+        type: string
+        description: "Fetch submodules in checkout ? (true/recursive/false)"
+        required: false
+        default: "false"
     secrets:
       build_args:
         description: "Build Args for Dockerfile"
@@ -31,6 +36,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          submodules: ${{ inputs.submodules }}
 
       - name: "Get Latest tag"
         id: latest_tag
