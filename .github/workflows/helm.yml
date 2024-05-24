@@ -39,7 +39,7 @@ on:
 
 jobs:
   deployment:
-    runs-on: "elegantencoder"
+    runs-on: "sonu-github-arc"
     container: "ubuntu:latest"
     steps:
       - name: Install dependencies
