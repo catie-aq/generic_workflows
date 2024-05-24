@@ -24,7 +24,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: elegantencoder
+    runs-on: sonu-github-arc
     container:
       image: ubuntu:22.04
 

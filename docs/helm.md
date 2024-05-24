@@ -22,7 +22,7 @@ Le workflow contient un seul job, `deployment`.
 
 ### deployment
 
-Ce job s'exécute sur le runner `elegantencoder` dans un conteneur avec l'image `ubuntu:latest`.
+Ce job s'exécute sur le runner `sonu-github-arc` dans un conteneur avec l'image `ubuntu:latest`.
 
 Les étapes pour ce job sont :
 
