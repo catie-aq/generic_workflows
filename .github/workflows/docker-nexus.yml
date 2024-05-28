@@ -7,7 +7,7 @@ on:
         type: string
         description: "Nexus IP"
         required: false
-        default: 192.168.63.151:50443
+        default: registry.vaniila.fr
       workflow_host:
         type: string
         description: "Github Action runner tag"
