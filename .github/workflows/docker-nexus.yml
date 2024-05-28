@@ -35,6 +35,9 @@ on:
 jobs:
   build:
     runs-on: ${{ inputs.workflow_host }}
+    container:
+      image: docker:dind
+      options: --privileged
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
