@@ -12,7 +12,7 @@ on:
         type: string
         description: "Github Action runner tag"
         required: false
-        default: sonu-github-arc
+        default: derivus
       submodules:
         type: string
         description: "Fetch submodules in checkout ? (true/recursive/false)"
@@ -37,7 +37,6 @@ jobs:
     runs-on: ${{ inputs.workflow_host }}
     container:
       image: docker:dind
-      options: --privileged
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
