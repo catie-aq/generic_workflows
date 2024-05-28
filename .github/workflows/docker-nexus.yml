@@ -12,7 +12,7 @@ on:
         type: string
         description: "Github Action runner tag"
         required: false
-        default: sonu-github-arc
+        default: self-hosted
       submodules:
         type: string
         description: "Fetch submodules in checkout ? (true/recursive/false)"
