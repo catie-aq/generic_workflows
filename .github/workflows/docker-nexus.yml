@@ -35,10 +35,12 @@ on:
 jobs:
   build:
     runs-on: ${{ inputs.workflow_host }}
-    container:
-      image: docker:dind
-      options: --privileged
+    container: ubuntu:latest
     steps:
+      - name: Install latest git
+        run: |
+          apt-get update
+          apt-get install -y git --reinstall
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
