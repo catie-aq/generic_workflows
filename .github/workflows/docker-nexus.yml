@@ -35,7 +35,6 @@ on:
 jobs:
   build:
     runs-on: ${{ inputs.workflow_host }}
-    container: ubuntu:latest
     steps:
       - name: Install latest git
         run: |
