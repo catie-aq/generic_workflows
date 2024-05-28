@@ -35,8 +35,10 @@ on:
 jobs:
   build:
     runs-on: ${{ inputs.workflow_host }}
-    container: docker:dind
+    container: ubuntu:22.04
     steps:
+      - name: Update git
+        run: apt-get update && apt-get install -y git
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
@@ -62,5 +64,5 @@ jobs:
         with:
           context: .
           push: true
-          tags: 192.168.63.151:50443/${{ github.event.repository.name }}:${{ steps.latest_tag.outputs.tag }}
+          tags: ${{inputs.nexus_host}}/${{ github.event.repository.name }}:${{ steps.latest_tag.outputs.tag }}
           build-args: ${{ secrets.build_args }}
