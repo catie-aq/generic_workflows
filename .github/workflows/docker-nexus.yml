@@ -35,10 +35,8 @@ on:
 jobs:
   build:
     runs-on: ${{ inputs.workflow_host }}
-    container: ubuntu:22.04
+    container: docker:dind
     steps:
-      - name: Update git
-        run: apt-get update && apt-get install -y git
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
