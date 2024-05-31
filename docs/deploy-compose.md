@@ -1,12 +1,12 @@
 # Déploiement avec Docker Compose
 
-Il a deux entrées : `docker_host` et `extra_args`, et trois secrets : `env_variables`, `TS_OAUTH_CLIENT_ID` et `TS_OAUTH_SECRET`.
+Il a deux entrées : `docker_host` et `extra_args`, et trois secrets : `env_variables`.
 
 ## Entrées
 
 | nom           | description                          | requis | par défaut |
 | ------------- | ------------------------------------ | ------ | ---------- |
-| `docker_host` | Docker Host                          | `false` | `tcp://100.121.122.93:2375` |
+| `docker_host` | Docker Host                          | `false` | `tcp://192.168.73.6:2375` |
 | `extra_args`  | Arguments supplémentaires pour la commande up | `false` | `""` |
 
 ## Secrets
@@ -14,8 +14,6 @@ Il a deux entrées : `docker_host` et `extra_args`, et trois secrets : `env_vari
 | nom                 | description                          |
 | ------------------- | ------------------------------------ |
 | `env_variables`     | Variables d'environnement            |
-| `TS_OAUTH_CLIENT_ID`| Tailscale OAuth Client ID            |
-| `TS_OAUTH_SECRET`   | Tailscale OAuth Secret               |
 
 ## Jobs
 
@@ -28,6 +26,5 @@ Ce job s'exécute dans un conteneur avec l'image `ubuntu:22.04`.
 Les étapes pour ce job sont :
 
 - Installer sudo, curl, git, docker-compose.
-- Configurer Tailscale en utilisant l'action `tailscale/github-action@v2`.
 - Extraire le code en utilisant l'action `actions/checkout@v4`.
 - Exécuter `docker-compose up -d --build --force-recreate`
