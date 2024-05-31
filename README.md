@@ -9,6 +9,6 @@ Ce dépôt contient une collection de workflows réutilisables. Les workflows so
 - [Cookiecutter](docs/cookiecutter.md) : Vérifie si un cookiecutter est applicable sans erreurs.
 - [Cruft](docs/cruft.md) : Met à jour un projet cookiecutter avec les dernières modifications en ouvrant une pull request.
 - [Deploy Compose](docs/deploy-compose.md) : Déploie une application sur un serveur en utilisant docker-compose.
+- [Deploy Helm](docs/deploy-helm.md) : Déploie une application sur un cluster Kubernetes en utilisant Helm.
 - [Docker Nexus](docs/docker-nexus.md) : Construit et publie une image Docker sur Nexus Repository Manager.
-- [Helm](docs/helm.md) : Déploie une application sur un cluster Kubernetes en utilisant Helm.
 - [Pre Commit](docs/pre-commit.md) : Exécute les hooks pre-commit d'un projet.
