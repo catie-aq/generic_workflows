@@ -27,11 +27,6 @@ on:
         description: "Extra Arguments"
         required: false
         default: ""
-      submodules:
-        type: string
-        description: "Fetch submodules in checkout ? (true/recursive/false)"
-        required: false
-        default: "false"
       update:
         type: boolean
         description: "Update Helm"
@@ -62,8 +57,6 @@ jobs:
           apt update
           apt install -y curl
       - uses: actions/checkout@v3
-        with:
-          submodules: ${{inputs.submodules}}
       - name: Install Charts
         if: ${{inputs.update}}
         uses: WyriHaximus/github-action-helm3@v3
@@ -81,6 +74,6 @@ jobs:
       - name: Deploy
         uses: WyriHaximus/github-action-helm3@v3
         with:
-          exec: helm upgrade ${{inputs.extra_args}} ${{inputs.release_name}} ${{inputs.chart_path}} --install --wait --atomic --namespace=${{inputs.namespace}} --values=${{inputs.values_file}} --force --create-namespace
+          exec: helm upgrade ${{inputs.extra_args}} ${{inputs.release_name}} ${{inputs.chart_path}} --install --wait --atomic --namespace=${{inputs.namespace}} --values=${{inputs.values_file}} --create-namespace
           kubeconfig: "${{ secrets.KUBECONFIG }}"
           overrule_existing_kubeconfig: "true"
