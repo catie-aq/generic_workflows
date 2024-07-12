@@ -68,7 +68,7 @@ jobs:
         if: ${{inputs.update}}
         uses: WyriHaximus/github-action-helm3@v3
         with:
-          exec: helm repo add ${{inputs.update_chart_name}} ${{inputs.update_chart_url}}
+          exec: helm repo update
           kubeconfig: "${{ secrets.KUBECONFIG }}"
           overrule_existing_kubeconfig: "true"
       - name: Deploy
