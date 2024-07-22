@@ -19,7 +19,7 @@ env:
 
 jobs:
   publish:
-    runs-on: self-hosted
+    runs-on: sonu-github-arc
 
     permissions:
       contents: read
