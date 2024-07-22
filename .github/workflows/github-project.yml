@@ -1,20 +1,41 @@
 name: Adds all issues and pull requests to a project
 
 on:
-  issues:
-    types:
-      - opened
-      - reopened
-  pull_request:
-    types:
-      - opened
+  workflow_call:
+    inputs:
+      project_number:
+        required: true
+        type: number
+        description: "The project number to add issues and pull requests to get from URL"
+      labeled:
+        required: false
+        type: string
+        description: "The label for filtering issues and pull requests"
+        default: ""
+      label-operator:
+        required: false
+        type: string
+        description: "The operator for filtering issues and pull requests"
+        default: ""
+    secrets:
+      personal_access_token:
+        required: true
+        description: "The personal access token (PAT) used to authenticate with the GitHub API"
+
+  # issues:
+  #   types:
+  #     - opened
+  # pull_request:
+  #   types:
+  #     - opened
 
 jobs:
   add-to-project:
-    name: Add issue to project
-    runs-on: ubuntu-latest
+    runs-on: sonu-github-arc
     steps:
       - uses: actions/add-to-project@v1.0.2
         with:
-          project-url: https://github.com/orgs/catie-aq/projects/21
-          github-token: ${{ secrets.PAT }}
+          project-url: https://github.com/orgs/catie-aq/projects/${{ inputs.project_number }}
+          github-token: ${{ secrets.personal_access_token }}
+          labeled: ${{ inputs.labeled }}
+          label-operator: ${{ inputs.label-operator }}
