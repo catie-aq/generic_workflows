@@ -11,4 +11,5 @@ Ce dépôt contient une collection de workflows réutilisables. Les workflows so
 - [Deploy Compose](docs/deploy-compose.md) : Déploie une application sur un serveur en utilisant docker-compose.
 - [Deploy Helm](docs/deploy-helm.md) : Déploie une application sur un cluster Kubernetes en utilisant Helm.
 - [Docker Nexus](docs/docker-nexus.md) : Construit et publie une image Docker sur Nexus Repository Manager.
+- [GitHub Project](docs/github-project.md) : Ajoute tous les problèmes et les demandes de tirage à un projet.
 - [Pre Commit](docs/pre-commit.md) : Exécute les hooks pre-commit d'un projet.
