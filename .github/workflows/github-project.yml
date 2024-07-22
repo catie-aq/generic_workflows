@@ -18,7 +18,7 @@ jobs:
 
       - name: Get project data
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.PAT }}
           ORGANIZATION: catie-aq
           PROJECT_NUMBER: 21
         run: |
@@ -53,7 +53,7 @@ jobs:
 
       - name: Add PR to project
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.PAT }}
           PR_ID: ${{ github.event.pull_request.node_id }}
         run: |
           item_id="$( gh api graphql -f query='
@@ -71,7 +71,7 @@ jobs:
       # Sets environment variables for this step. Replace `YOUR_TOKEN` with the name of the secret that contains your personal access token.
       - name: Set fields
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.PAT }}
         # Sets the value of the `Status` field to `Todo`. Sets the value of the `Date posted` field.
         run: |
           gh api graphql -f query='
