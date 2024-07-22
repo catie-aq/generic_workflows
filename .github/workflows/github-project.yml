@@ -4,8 +4,16 @@ on:
   pull_request:
 jobs:
   track_pr:
-    runs-on: ubuntu-latest
+    runs-on: sonu-github-arc
+    container: ubuntu:22.04
     steps:
+      - name: Install GitHub CLI
+        run: |
+          sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key C99B11DEB97541F0
+          sudo apt-add-repository https://cli.github.com/packages
+          sudo apt update
+          sudo apt install gh
+
       - name: Get project data
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -58,7 +66,7 @@ jobs:
       - name: Get date
         run: echo "DATE=$(date +"%Y-%m-%d")" >> $GITHUB_ENV
 
-# Sets environment variables for this step. Replace `YOUR_TOKEN` with the name of the secret that contains your personal access token.
+      # Sets environment variables for this step. Replace `YOUR_TOKEN` with the name of the secret that contains your personal access token.
       - name: Set fields
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
