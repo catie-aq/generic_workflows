@@ -20,7 +20,6 @@ env:
 jobs:
   publish:
     runs-on: sonu-github-arc
-    container: ubuntu:22.04
 
     permissions:
       contents: read
