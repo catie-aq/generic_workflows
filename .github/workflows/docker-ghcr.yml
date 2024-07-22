@@ -19,8 +19,7 @@ env:
 
 jobs:
   publish:
-    runs-on: sonu-github-arc
-    container: docker:dind
+    runs-on: derivus
 
     permissions:
       contents: read
