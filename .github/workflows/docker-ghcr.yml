@@ -2,45 +2,148 @@ name: Publish to GHCR
 
 on:
   workflow_call:
+    inputs:
+      Dockerfile:
+        type: string
+        description: "Path to the Dockerfile"
+        required: false
+        default: "."
+      version:
+        type: string
+        description: "Version for the Docker image"
+        required: false
+      target:
+        type: string
+        description: "Target for the Dockerfile"
+        required: false
+
     secrets:
+      build_args:
+        description: "Build Args for Dockerfile"
+        required: false
       PAT:
-        description: 'Personal Access Token'
-        required: true
+        description: "Personal Access Token for private submodules"
+        required: false
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  PAT: ${{ secrets.PAT }}
 
 jobs:
   publish:
     runs-on: sonu-github-arc
-    container: ubuntu:22.04
 
     permissions:
       contents: read
       packages: write
 
     steps:
+      - name: update git
+        run: sudo apt-get update && sudo apt-get install git -y
+
       - name: Checkout repository
-        uses: actions/checkout@v2
+        if: ${{ env.PAT != '' }}
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+          token: ${{ secrets.PAT }}
+
+      - name: Checkout repository
+        if: ${{ env.PAT == '' }}
+        uses: actions/checkout@v4
 
       - name: Login to GHCR
         uses: docker/login-action@v1
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.PAT }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
+      # No version no target : Use metadata-action to extract tags and labels
       - name: Extract metadata (tags, labels) for Docker
         id: meta
+        if: ${{ inputs.target == '' && inputs.version == '' }}
         uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
-      - name: Build and push Docker image
+      - name: Build and push Docker image (no version, no target)
+        if: ${{ inputs.target == '' && inputs.version == '' }}
         uses: docker/build-push-action@v2
         with:
-          context: .
+          context: ${{ inputs.Dockerfile}}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: ${{ secrets.build_args }}
+
+      # Version is set, no target : Use metadata-action to extract tags and labels then override the tag
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta-version
+        if: ${{ inputs.version != '' && inputs.target == '' }}
+        uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+      - name: Overide the tag with version
+        if: ${{ inputs.version != '' && inputs.target == '' }}
+        id: tag
+        run: |
+          echo "::set-output name=tags::${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ inputs.version }}"
+
+      - name: Build and push Docker image (version, no target)
+        if: ${{ inputs.version != '' && inputs.target == '' }}
+        uses: docker/build-push-action@v2
+        with:
+          context: ${{ inputs.Dockerfile}}
+          push: true
+          tags: ${{ steps.tag.outputs.tags }}
+          labels: ${{ steps.meta-version.outputs.labels }}
+          build-args: ${{ secrets.build_args }}
+
+      # Target is set, no version : Use metadata-action with suffix
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta-target
+        if: ${{ inputs.version == '' && inputs.target != '' }}
+        uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          flavor: |
+            suffix= -${{ inputs.target }}
+
+      - name: Build and push Docker image (no version, target)
+        if: ${{ inputs.version == '' && inputs.target != '' }}
+        uses: docker/build-push-action@v2
+        with:
+          context: ${{ inputs.Dockerfile}}
+          push: true
+          tags: ${{ steps.meta-target.outputs.tags }}
+          labels: ${{ steps.meta-target.outputs.labels }}
+          target: ${{ inputs.target }}
+          build-args: ${{ secrets.build_args }}
+
+      # Version and target are set : Override the tag
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta-version-target
+        if: ${{ inputs.version != '' && inputs.target != '' }}
+        uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+      - name: Overide the tag with version and target
+        id: version-target
+        run: |
+          echo "::set-output name=tags::${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ inputs.version }}-${{ inputs.target }}"
+
+      - name: Build and push Docker image (version, target)
+        uses: docker/build-push-action@v2
+        if: ${{ inputs.version != '' && inputs.target != '' }}
+        with:
+          context: ${{ inputs.Dockerfile}}
+          push: true
+          tags: ${{ steps.version-target.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          target: ${{ inputs.target }}
+          build-args: ${{ secrets.build_args }}
