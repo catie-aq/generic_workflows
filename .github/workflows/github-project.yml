@@ -2,7 +2,8 @@
 name: Add PR to project
 on:
   pull_request:
-    types: [ready_for_review]
+    types:
+      - ready_for_review
 jobs:
   track_pr:
     runs-on: sonu-github-arc
