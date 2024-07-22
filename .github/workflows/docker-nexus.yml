@@ -8,6 +8,16 @@ on:
         description: "Nexus IP"
         required: false
         default: 192.168.63.151:50443
+      workflow_host:
+        type: string
+        description: "Github Action runner tag"
+        required: false
+        default: self-hosted
+      submodules:
+        type: string
+        description: "Fetch submodules in checkout ? (true/recursive/false)"
+        required: false
+        default: "false"
     secrets:
       build_args:
         description: "Build Args for Dockerfile"
@@ -18,14 +28,20 @@ on:
       nexus_password:
         description: "Nexus Password"
         required: true
+      PAT:
+        description: "Personal Access Token"
+        required: false
 
 jobs:
   build:
-    runs-on: self-hosted
+    runs-on: ${{ inputs.workflow_host }}
     container: docker:dind
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          submodules: ${{ inputs.submodules }}
+          token: ${{ secrets.PAT }}
 
       - name: "Get Latest tag"
         id: latest_tag
