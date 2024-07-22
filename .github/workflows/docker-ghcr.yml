@@ -20,6 +20,7 @@ env:
 jobs:
   publish:
     runs-on: sonu-github-arc
+    container: docker:dind
 
     permissions:
       contents: read
