@@ -11,10 +11,10 @@ jobs:
     steps:
       - name: Install GitHub CLI
         run: |
-          apt-key adv --keyserver keyserver.ubuntu.com --recv-key C99B11DEB97541F0
-          apt-add-repository https://cli.github.com/packages
-          apt update
-          apt install gh
+          apt-get update
+          apt-get install -y wget git
+          wget https://github.com/cli/cli/releases/download/v2.53.0/gh_2.53.0_linux_amd64.deb
+          dpkg -i gh_2.53.0_linux_amd64.deb
 
       - name: Get project data
         env:
