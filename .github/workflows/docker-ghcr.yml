@@ -8,11 +8,6 @@ on:
         description: "Path to the Dockerfile"
         required: false
         default: "."
-      image_name:
-        type: string
-        description: "Name of the Docker image"
-        required: false
-        default: ${{ github.repository }}
       version:
         type: string
         description: "Version for the Docker image"
@@ -31,7 +26,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ inputs.image_name }}
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   publish:
@@ -58,13 +53,22 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
-      - name: If Tag Version
+      - name: If version is set, set the tag
         id: tag
         run: |
           if [[ "${{ inputs.version }}" != '' ]]; then
-            echo "::set-output name=tags::${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ inputs.version }}.${{ env.DOCKER_METADATA_OUTPUT_VERSION }}"
+            echo "::set-output name=tags::${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ inputs.version }}"
           else
-            echo "::set-output name=tags::${{ steps.meta.outputs.tags }}"
+            echo "::set-output name=tags::${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.DOCKER_METADATA_OUTPUT_VERSION }}"
+          fi
+
+      - name: If target is set, set the tag
+        id: target
+        run: |
+          if [[ "${{ inputs.target }}" != '' ]]; then
+            echo "::set-output name=tags::${{ steps.tag.outputs.tags }}-${{ inputs.target }}"
+          else
+            echo "::set-output name=tags::${{ steps.tag.outputs.tags }}"
           fi
 
       - name: Build and push Docker image
@@ -72,6 +76,6 @@ jobs:
         with:
           context: ${{ inputs.Dockerfile}}
           push: true
-          tags: ${{ steps.tag.outputs.tags }}
+          tags: ${{ steps.target.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           target: ${{ inputs.target }}
