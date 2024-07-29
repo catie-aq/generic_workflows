@@ -8,6 +8,12 @@ on:
         description: 'Path to the Dockerfile'
         required: false
         default: '.'
+      image_name:
+        type: string
+        description: 'Name of the Docker image'
+        required: false
+        default: ${{ github.repository }}
+
     secrets:
       PAT:
         description: 'Personal Access Token'
@@ -15,7 +21,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_NAME: ${{ inputs.image_name }}
 
 jobs:
   publish:
