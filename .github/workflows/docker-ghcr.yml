@@ -5,18 +5,28 @@ on:
     inputs:
       Dockerfile:
         type: string
-        description: 'Path to the Dockerfile'
+        description: "Path to the Dockerfile"
         required: false
-        default: '.'
+        default: "."
       image_name:
         type: string
-        description: 'Name of the Docker image'
+        description: "Name of the Docker image"
         required: false
         default: ${{ github.repository }}
+      version:
+        type: string
+        description: "Version for the Docker image"
+        required: false
+        default: ""
+      target:
+        type: string
+        description: "Target for the Dockerfile"
+        required: false
+        default: ""
 
     secrets:
       PAT:
-        description: 'Personal Access Token'
+        description: "Personal Access Token"
         required: true
 
 env:
@@ -48,10 +58,20 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
+      - name: If Tag Version
+        id: tag
+        run: |
+          if [[ "${{ inputs.version }}" != '' ]]; then
+            echo "::set-output name=tags::${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ inputs.version }}"
+          else
+            echo "::set-output name=tags::${{ steps.meta.outputs.tags }}"
+          fi
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v2
         with:
           context: ${{ inputs.Dockerfile}}
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: ${{ steps.tag.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          target: ${{ inputs.target }}
