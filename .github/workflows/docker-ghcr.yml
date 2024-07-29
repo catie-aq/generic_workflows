@@ -62,7 +62,7 @@ jobs:
         id: tag
         run: |
           if [[ "${{ inputs.version }}" != '' ]]; then
-            echo "::set-output name=tags::${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ inputs.version }}"
+            echo "::set-output name=tags::${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ inputs.version }}-${{ steps.meta.outputs.labels.org.opencontainers.image.version }}"
           else
             echo "::set-output name=tags::${{ steps.meta.outputs.tags }}"
           fi
