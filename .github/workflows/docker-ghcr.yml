@@ -20,13 +20,17 @@ on:
         default: ""
 
     secrets:
+      build_args:
+        description: "Build Args for Dockerfile"
+        required: false
       PAT:
         description: "Personal Access Token"
-        required: true
+        required: false
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  PAT: ${{ secrets.PAT }}
 
 jobs:
   publish:
@@ -41,10 +45,15 @@ jobs:
         run: sudo apt-get update && sudo apt-get install git -y
 
       - name: Checkout repository
+        if: ${{ env.PAT != '' }}
         uses: actions/checkout@v4
         with:
           submodules: true
           token: ${{ secrets.PAT }}
+
+      - name: Checkout repository
+        if: ${{ env.PAT == '' }}
+        uses: actions/checkout@v4
 
       - name: Login to GHCR
         uses: docker/login-action@v1
@@ -85,3 +94,4 @@ jobs:
           tags: ${{ steps.target.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           target: ${{ inputs.target }}
+          build-args: ${{ secrets.build_args }}
