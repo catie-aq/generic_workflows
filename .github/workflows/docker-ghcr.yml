@@ -37,6 +37,9 @@ jobs:
       packages: write
 
     steps:
+      - name: update git
+        run: apt-get update && apt-get install git -y
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
