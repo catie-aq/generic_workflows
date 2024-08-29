@@ -134,6 +134,7 @@ jobs:
 
       - name: Overide the tag with version and target
         id: version-target
+        if: ${{ inputs.version != '' && inputs.target != '' }}
         run: |
           echo "::set-output name=tags::${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ inputs.version }}-${{ inputs.target }}"
 
