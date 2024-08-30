@@ -8,10 +8,6 @@ on:
         description: "Path to the Dockerfile"
         required: false
         default: "."
-      version:
-        type: string
-        description: "Version for the Docker image"
-        required: false
       target:
         type: string
         description: "Target for the Dockerfile"
@@ -60,91 +56,28 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # No version no target : Use metadata-action to extract tags and labels
-      - name: Extract metadata (tags, labels) for Docker
+      - name: Extract metadata for Docker
         id: meta
-        if: ${{ inputs.target == '' && inputs.version == '' }}
+        if: ${{ inputs.version != '' && inputs.target != '' }}
         uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
-      - name: Build and push Docker image (no version, no target)
-        if: ${{ inputs.target == '' && inputs.version == '' }}
+      - name: Set formatted target
+        id: target
+        run: |
+          if [ -z "${{ inputs.target }}" ]; then
+            echo "::set-output name=target::-${{ inputs.target }}"
+          else
+            echo "::set-output name=target::${{ inputs.target }}"
+          fi
+
+      - name: Build and push Docker image (version, target)
         uses: docker/build-push-action@v2
         with:
           context: ${{ inputs.Dockerfile}}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          build-args: ${{ secrets.build_args }}
-
-      # Version is set, no target : Use metadata-action to extract tags and labels then override the tag
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta-version
-        if: ${{ inputs.version != '' && inputs.target == '' }}
-        uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-
-      - name: Overide the tag with version
-        if: ${{ inputs.version != '' && inputs.target == '' }}
-        id: tag
-        run: |
-          echo "::set-output name=tags::${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ inputs.version }}"
-
-      - name: Build and push Docker image (version, no target)
-        if: ${{ inputs.version != '' && inputs.target == '' }}
-        uses: docker/build-push-action@v2
-        with:
-          context: ${{ inputs.Dockerfile}}
-          push: true
-          tags: ${{ steps.tag.outputs.tags }}
-          labels: ${{ steps.meta-version.outputs.labels }}
-          build-args: ${{ secrets.build_args }}
-
-      # Target is set, no version : Use metadata-action with suffix
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta-target
-        if: ${{ inputs.version == '' && inputs.target != '' }}
-        uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          flavor: |
-            suffix= -${{ inputs.target }}
-
-      - name: Build and push Docker image (no version, target)
-        if: ${{ inputs.version == '' && inputs.target != '' }}
-        uses: docker/build-push-action@v2
-        with:
-          context: ${{ inputs.Dockerfile}}
-          push: true
-          tags: ${{ steps.meta-target.outputs.tags }}
-          labels: ${{ steps.meta-target.outputs.labels }}
-          target: ${{ inputs.target }}
-          build-args: ${{ secrets.build_args }}
-
-      # Version and target are set : Override the tag
-
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta-version-target
-        if: ${{ inputs.version != '' && inputs.target != '' }}
-        uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-
-      - name: Overide the tag with version and target
-        id: version-target
-        if: ${{ inputs.version != '' && inputs.target != '' }}
-        run: |
-          echo "::set-output name=tags::${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ inputs.version }}-${{ inputs.target }}"
-
-      - name: Build and push Docker image (version, target)
-        uses: docker/build-push-action@v2
-        if: ${{ inputs.version != '' && inputs.target != '' }}
-        with:
-          context: ${{ inputs.Dockerfile}}
-          push: true
-          tags: ${{ steps.version-target.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          target: ${{ inputs.target }}
+          target: ${{ steps.target.outputs.target }}
           build-args: ${{ secrets.build_args }}
