@@ -59,7 +59,7 @@ jobs:
       - name: Set formatted suffix
         id: suffix
         run: |
-          if [ -z "${{ inputs.target }}" ]; then
+          if [ ${{ inputs.target }} != "" ]; then
             echo "::set-output name=target::-${{ inputs.target }}"
           else
             echo "::set-output name=target::${{ inputs.target }}"
