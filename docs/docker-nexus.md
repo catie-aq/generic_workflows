@@ -2,6 +2,8 @@
 
 Ce workflow GitHub Actions est déclenché lorsqu'un appel de workflow est effectué. Il a une entrée : `nexus_host`, et trois secrets : `build_args`, `nexus_username` et `nexus_password`.
 
+Deprecated : Ce workflow n'est plus utilisé. Il est remplacé par `docker-ghcr.yml`.
+
 ## Entrées
 
 | nom           | description                          | requis | par défaut |

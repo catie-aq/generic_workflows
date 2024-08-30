@@ -37,6 +37,10 @@ jobs:
     runs-on: ${{ inputs.workflow_host }}
     container: docker:dind
     steps:
+      - name: Deprecation Warning
+        run: |
+          echo "This action is deprecated, please use catie-aq/generic_workflows/.github/docker-ghcr.yml instead"
+          echo "This action will be run for this time and display as failed, consider using the new action in the future"
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
@@ -64,3 +68,5 @@ jobs:
           push: true
           tags: 192.168.63.151:50443/${{ github.event.repository.name }}:${{ steps.latest_tag.outputs.tag }}
           build-args: ${{ secrets.build_args }}
+      - name: Deprecation failure
+        run: exit 1
