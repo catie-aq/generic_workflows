@@ -1,0 +1,30 @@
+name: Docker Build and push to Nexus
+
+on:
+  workflow_call:
+    inputs:
+      app_path:
+        type: string
+        description: "Docker compose file's path"
+        required: true
+      app_version:
+        type: string
+        description: "Docker image tag"
+        required: true
+
+jobs:
+  build:
+    runs-on: ml
+    steps:
+      - name: Stop currently running app
+        run: docker compose down
+        working-directory: ${{ inputs.app_path }}
+      - name: Update environment
+        run: |
+          grep -v "IMAGE_TAG" .env > .env.tmp
+          echo "IMAGE_TAG=${{ inputs.app_version }}" >> .env.tmp
+          mv .env.tmp .env
+        working-directory: ${{ inputs.app_path }}
+      - name: Restart app with new version
+        run: docker compose up -d
+        working-directory: ${{ inputs.app_path }}
