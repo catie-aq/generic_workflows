@@ -1,0 +1,67 @@
+name: Docker Build and push to Nexus
+
+on:
+  workflow_call:
+    inputs:
+      image_name:
+        type: string
+        description: "Docker image name"
+        required: true
+      image_tag:
+        type: string
+        description: "Docker image tag"
+        required: true
+      nexus_host:
+        type: string
+        description: "Nexus IP"
+        required: false
+        default: 192.168.63.151:50443
+      workflow_host:
+        type: string
+        description: "Github Action runner tag"
+        required: false
+        default: self-hosted
+      submodules:
+        type: string
+        description: "Fetch submodules in checkout ? (true/recursive/false)"
+        required: false
+        default: "false"
+    secrets:
+      build_args:
+        description: "Build Args for Dockerfile"
+        required: false
+      nexus_username:
+        description: "Nexus Username"
+        required: true
+      nexus_password:
+        description: "Nexus Password"
+        required: true
+      PAT:
+        description: "Personal Access Token"
+        required: false
+
+jobs:
+  build:
+    runs-on: ${{ inputs.workflow_host }}
+    container: docker:dind
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: ${{ inputs.submodules }}
+          token: ${{ secrets.PAT }}
+
+      - name: "Login to Nexus Registry"
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ inputs.nexus_host }}
+          username: ${{ secrets.NEXUS_USERNAME }}
+          password: ${{ secrets.NEXUS_PASSWORD }}
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: 192.168.63.151:50443/${{ inputs.image_name }}:${{ inputs.image_tag }}
+          build-args: ${{ secrets.build_args }}
