@@ -3,11 +3,6 @@ name: Docker Build and push to Nexus
 on:
   workflow_call:
     inputs:
-      nexus_host:
-        type: string
-        description: "Nexus IP"
-        required: false
-        default: 192.168.63.151:50443
       workflow_host:
         type: string
         description: "Github Action runner tag"
@@ -27,6 +22,9 @@ on:
         required: true
       nexus_password:
         description: "Nexus Password"
+        required: true
+      nexus_host:
+        description: "Nexus IP"
         required: true
       PAT:
         description: "Personal Access Token"
@@ -57,7 +55,7 @@ jobs:
       - name: "Login to Nexus Registry"
         uses: docker/login-action@v3
         with:
-          registry: ${{ inputs.nexus_host }}
+          registry: ${{ secrets.nexus_host }}
           username: ${{ secrets.NEXUS_USERNAME }}
           password: ${{ secrets.NEXUS_PASSWORD }}
 
@@ -66,7 +64,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: 192.168.63.151:50443/${{ github.event.repository.name }}:${{ steps.latest_tag.outputs.tag }}
+          tags: ${{ secrets.nexus_host }}/${{ github.event.repository.name }}:${{ steps.latest_tag.outputs.tag }}
           build-args: ${{ secrets.build_args }}
       - name: Deprecation failure
         run: exit 1
