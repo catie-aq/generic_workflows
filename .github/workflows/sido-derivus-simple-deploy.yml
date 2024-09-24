@@ -1,4 +1,4 @@
-name: Docker Build and push to Nexus
+name: Restart Derivus App (SIDO)
 
 on:
   workflow_call:
