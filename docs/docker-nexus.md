@@ -4,12 +4,6 @@ Ce workflow GitHub Actions est déclenché lorsqu'un appel de workflow est effec
 
 Deprecated : Ce workflow n'est plus utilisé. Il est remplacé par `docker-ghcr.yml`.
 
-## Entrées
-
-| nom           | description                          | requis | par défaut |
-| ------------- | ------------------------------------ | ------ | ---------- |
-| `nexus_host`  | IP de Nexus                          | `false` | `192.168.63.151:50443` |
-
 ## Secrets
 
 | nom             | description                          |
@@ -17,6 +11,7 @@ Deprecated : Ce workflow n'est plus utilisé. Il est remplacé par `docker-ghcr.
 | `build_args`    | Arguments de construction pour Dockerfile |
 | `nexus_username`| Nom d'utilisateur Nexus |
 | `nexus_password`| Mot de passe Nexus |
+| `nexus_host`    | Adresse de l'instance Nexus |
 
 ## Jobs
 
