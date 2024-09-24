@@ -8,7 +8,7 @@ Deprecated : Ce workflow n'est plus utilisé. Il est remplacé par `docker-ghcr.
 
 | nom           | description                          | requis | par défaut |
 | ------------- | ------------------------------------ | ------ | ---------- |
-| `nexus_host`  | IP de Nexus                          | `false` | `192.168.63.151:50443` |
+| `nexus_host`  | IP de Nexus                          | `false` | `NEXUS_REGISTRY_HOST` |
 
 ## Secrets
 
