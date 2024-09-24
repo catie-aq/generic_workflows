@@ -1,4 +1,4 @@
-name: Docker Build and push to Nexus
+name: App update on derivus (SIDO)
 
 on:
   workflow_call:

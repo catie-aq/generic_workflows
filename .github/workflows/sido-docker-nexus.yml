@@ -1,4 +1,4 @@
-name: Docker Build and push to Nexus
+name: Docker Build and push to Nexus (SIDO)
 
 on:
   workflow_call:
