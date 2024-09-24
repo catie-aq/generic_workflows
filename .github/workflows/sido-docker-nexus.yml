@@ -41,6 +41,8 @@ jobs:
   build:
     runs-on: ${{ inputs.workflow_host }}
     container: docker:dind
+    env: 
+      REG_HOST: ${{ inputs.nexus_host == 'NEXUS_REGISTRY_HOST' && secrets.NEXUS_REGISTRY_HOST || inputs.nexus_host }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -50,7 +52,7 @@ jobs:
       - name: "Login to Nexus Registry"
         uses: docker/login-action@v3
         with:
-          registry: ${{ inputs.nexus_host == 'NEXUS_REGISTRY_HOST' && secrets.NEXUS_REGISTRY_HOST || inputs.nexus_host }}
+          registry: ${{ env.REG_HOST }}
           username: ${{ secrets.NEXUS_USERNAME }}
           password: ${{ secrets.NEXUS_PASSWORD }}
 
@@ -59,5 +61,5 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ secrets.NEXUS_REGISTRY_HOST }}/${{ inputs.image_name }}:${{ inputs.image_tag }}
+          tags: ${{ env.REG_HOST }}/${{ inputs.image_name }}:${{ inputs.image_tag }}
           build-args: ${{ secrets.build_args }}
