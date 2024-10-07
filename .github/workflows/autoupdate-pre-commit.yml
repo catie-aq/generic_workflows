@@ -20,7 +20,7 @@ jobs:
     container:
       image: ubuntu:22.04
     steps:
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v5
 
       - name: Install sqlite3 and git
         run: |
@@ -41,7 +41,7 @@ jobs:
           cd folder/${{ inputs.path }}
           pre-commit autoupdate
 
-      - uses: peter-evans/create-pull-request@v6
+      - uses: peter-evans/create-pull-request@v7
         with:
           path: folder
           branch: update/pre-commit-hooks
