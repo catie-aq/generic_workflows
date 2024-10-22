@@ -5,9 +5,14 @@ on:
     inputs:
       Dockerfile:
         type: string
-        description: "Path to the Dockerfile"
+        description: "Path to the Repository"
         required: false
         default: "."
+      file:
+        type: string
+        description: "Path to the Dockerfile if not in root"
+        required: false
+        default: "${{ inputs.Dockerfile }}/Dockerfile"
       target:
         type: string
         description: "Target for the Dockerfile"
@@ -77,6 +82,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: ${{ inputs.Dockerfile}}
+          file: ${{ inputs.file }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
