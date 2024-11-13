@@ -51,7 +51,7 @@ jobs:
   deployment:
     runs-on: "sonu-github-arc"
     container: "ubuntu:latest"
-    environment: production
+    environment: k8s_discodiode
     steps:
       - name: Install dependencies
         run: |

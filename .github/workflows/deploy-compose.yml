@@ -21,6 +21,7 @@ on:
 jobs:
   deploy:
     runs-on: sonu-github-arc
+    environment: compose
     container:
       image: ubuntu:22.04
 
