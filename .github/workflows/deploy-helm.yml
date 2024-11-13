@@ -51,6 +51,7 @@ jobs:
   deployment:
     runs-on: "sonu-github-arc"
     container: "ubuntu:latest"
+    environment: production
     steps:
       - name: Install dependencies
         run: |
