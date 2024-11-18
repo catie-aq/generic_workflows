@@ -57,23 +57,23 @@ jobs:
         run: |
           apt update
           apt install -y curl
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install Charts
         if: ${{inputs.update}}
-        uses: WyriHaximus/github-action-helm3@v3
+        uses: WyriHaximus/github-action-helm3@v4
         with:
           exec: helm repo add ${{inputs.update_chart_name}} ${{inputs.update_chart_url}}
           kubeconfig: "${{ secrets.KUBECONFIG }}"
           overrule_existing_kubeconfig: "true"
       - name: Update
         if: ${{inputs.update}}
-        uses: WyriHaximus/github-action-helm3@v3
+        uses: WyriHaximus/github-action-helm3@v4
         with:
           exec: helm repo update
           kubeconfig: "${{ secrets.KUBECONFIG }}"
           overrule_existing_kubeconfig: "true"
       - name: Deploy
-        uses: WyriHaximus/github-action-helm3@v3
+        uses: WyriHaximus/github-action-helm3@v4
         with:
           exec: helm upgrade ${{inputs.extra_args}} ${{inputs.release_name}} ${{inputs.chart_path}} --install --wait --atomic --namespace=${{inputs.namespace}} --values=${{inputs.values_file}} --create-namespace
           kubeconfig: "${{ secrets.KUBECONFIG }}"
