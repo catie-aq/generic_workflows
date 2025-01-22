@@ -56,7 +56,7 @@ jobs:
 
       - name: Login to GHCR with GitHub Token
         if: ${{ env.PAT == '' }}
-        uses: docker/login-action@v1
+        uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -64,7 +64,7 @@ jobs:
 
       - name: Login to GHCR with Personal Access Token
         if: ${{ env.PAT != '' }}
-        uses: docker/login-action@v1
+        uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -81,7 +81,7 @@ jobs:
 
       - name: Extract metadata for Docker
         id: meta
-        uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
+        uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           flavor: |
@@ -97,7 +97,7 @@ jobs:
           fi
 
       - name: Build and push Docker image (version, target)
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v6
         with:
           context: ${{ inputs.Dockerfile}}
           file: ${{ steps.file.outputs.file }}
