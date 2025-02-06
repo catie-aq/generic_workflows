@@ -96,6 +96,9 @@ jobs:
             echo "::set-output name=file::${{ inputs.file }}"
           fi
 
+      - name: Clear Docker Buildx cache
+        run: docker builder prune -af
+
       - name: Build and push Docker image (version, target)
         uses: docker/build-push-action@v2
         with:
