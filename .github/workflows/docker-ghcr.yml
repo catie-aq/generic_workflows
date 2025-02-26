@@ -97,7 +97,7 @@ jobs:
           fi
 
       - name: Clear Docker Buildx cache
-        run: docker builder prune -af
+        run: docker system prune -a -f
 
       - name: Build and push Docker image (version, target)
         uses: docker/build-push-action@v2
