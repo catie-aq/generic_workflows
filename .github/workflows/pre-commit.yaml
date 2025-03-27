@@ -2,12 +2,17 @@ name: Run pre-commit
 
 on:
   workflow_call:
+    inputs:
+      image-tag:
+        required: false
+        type: string
+        default: "latest"
 
 jobs:
   pre-commit:
     runs-on: sonu-github-arc
     container:
-      image: ghcr.io/catie-aq/pre-commit_docker:latest
+      image: ghcr.io/catie-aq/pre-commit_docker:${{ inputs.image-tag }}
     steps:
       - uses: actions/checkout@v4
         with:
