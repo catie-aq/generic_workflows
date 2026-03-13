@@ -1,0 +1,67 @@
+name: Markdown to CATIE LaTeX PDF
+
+on:
+  workflow_call:
+    secrets:
+      personal_access_token:
+        required: true
+
+permissions: read-all
+
+jobs:
+  build:
+    runs-on:
+      group: default
+    container:
+      image: pandoc/extra:3.9.0.0-alpine
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          apk add --no-cache bash nodejs npm
+
+      - name: Install git
+        run: |
+          apk add --no-cache git
+
+      - name: Configure PAT for private repositories
+        env:
+          PRIVATE_REPO_PAT: ${{ secrets.personal_access_token }}
+        run: |
+          if [ -z "${PRIVATE_REPO_PAT}" ]; then
+            echo "PRIVATE_REPO_PAT is not set. Cloning private repositories may fail." >&2
+          else
+            echo "::add-mask::${PRIVATE_REPO_PAT}"
+            git config --global url."https://x-access-token:${PRIVATE_REPO_PAT}@github.com/".insteadOf "https://github.com/"
+          fi
+
+      - name: Configure TeX Live mirror
+        run: |
+          TL_YEAR=$(tlmgr --version | awk '/TeX Live .* version [0-9]{4}$/ {print $NF; exit}' || true)
+          [ -n "${TL_YEAR}" ] || { echo "Unable to detect TeX Live year from tlmgr --version"; exit 1; }
+
+          tlmgr option repository "https://ftp.math.utah.edu/pub/tex/historic/systems/texlive/${TL_YEAR}/tlnet-final"
+
+      - name: Install TeX packages
+        run: |
+          tlmgr install placeins mathtools nomencl hyphenat lastpage lipsum newunicodechar pdfpages jknapltx raleway pdflscape rsfs soul
+
+      - name: Build PDF
+        run: |
+          bash compile.sh
+
+      - name: Upload PDF artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: pdf-documents
+          path: out/*.pdf
+          if-no-files-found: error
+
+      - name: Create GitHub Release
+        if: github.ref_type == 'tag'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: out/*.pdf
+          generate_release_notes: true
