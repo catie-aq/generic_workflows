@@ -6,8 +6,6 @@ on:
       personal_access_token:
         required: true
 
-permissions: read-all
-
 jobs:
   build:
     runs-on: sonu-github-arc
