@@ -10,8 +10,7 @@ permissions: read-all
 
 jobs:
   build:
-    runs-on:
-      group: default
+    runs-on: sonu-github-arc
     container:
       image: pandoc/extra:3.9.0.0-alpine
     steps:
@@ -20,22 +19,13 @@ jobs:
 
       - name: Install system dependencies
         run: |
-          apk add --no-cache bash nodejs npm
-
-      - name: Install git
-        run: |
-          apk add --no-cache git
+          apk add --no-cache bash nodejs npm git
 
       - name: Configure PAT for private repositories
         env:
           PRIVATE_REPO_PAT: ${{ secrets.personal_access_token }}
         run: |
-          if [ -z "${PRIVATE_REPO_PAT}" ]; then
-            echo "PRIVATE_REPO_PAT is not set. Cloning private repositories may fail." >&2
-          else
-            echo "::add-mask::${PRIVATE_REPO_PAT}"
-            git config --global url."https://x-access-token:${PRIVATE_REPO_PAT}@github.com/".insteadOf "https://github.com/"
-          fi
+          git config --global url."https://x-access-token:${PRIVATE_REPO_PAT}@github.com/${GITHUB_REPOSITORY_OWNER}/".insteadOf "https://github.com/${GITHUB_REPOSITORY_OWNER}/"
 
       - name: Configure TeX Live mirror
         run: |
@@ -65,3 +55,4 @@ jobs:
         with:
           files: out/*.pdf
           generate_release_notes: true
+          draft: true
