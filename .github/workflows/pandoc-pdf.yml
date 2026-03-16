@@ -56,3 +56,4 @@ jobs:
           files: out/*.pdf
           generate_release_notes: true
           draft: true
+          token: ${{ secrets.GITHUB_TOKEN }}
