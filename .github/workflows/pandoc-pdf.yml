@@ -1,4 +1,4 @@
-name: Markdown to CATIE LaTeX PDF
+name: Pandoc PDF
 
 on:
   workflow_call:
