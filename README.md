@@ -13,4 +13,5 @@ Ce dépôt contient une collection de workflows réutilisables. Les workflows so
 - [Docker GHCR](docs/docker-ghcr.md) : Construit et publie une image Docker sur GitHub Container Registry.
 - [Docker Nexus](docs/docker-nexus.md) : Construit et publie une image Docker sur Nexus Repository Manager.
 - [GitHub Project](docs/github-project.md) : Ajoute tous les problèmes et les demandes de tirage à un projet.
+- [Pandoc PDF](docs/pandoc-pdf.md) : Convertit un fichier Markdown en PDF en utilisant Pandoc.
 - [Pre Commit](docs/pre-commit.md) : Exécute les hooks pre-commit d'un projet.
