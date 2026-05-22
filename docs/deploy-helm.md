@@ -15,6 +15,7 @@
 | nom          | description |
 | ------------ | ----------- |
 | `kubeconfig` | Kubeconfig  |
+| `extra_secret` | Extra Secret (optionnel) |
 
 ## Jobs
 

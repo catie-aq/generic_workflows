@@ -46,6 +46,9 @@ on:
       kubeconfig:
         description: "Kubeconfig"
         required: true
+      extra_secret:
+        description: "Extra Secret"
+        required: false
 
 jobs:
   deployment:
@@ -75,6 +78,6 @@ jobs:
       - name: Deploy
         uses: WyriHaximus/github-action-helm3@v3
         with:
-          exec: helm upgrade ${{inputs.extra_args}} ${{inputs.release_name}} ${{inputs.chart_path}} --install --wait --atomic --namespace=${{inputs.namespace}} --values=${{inputs.values_file}} --create-namespace
+          exec: helm upgrade ${{inputs.extra_args}} ${{secrets.extra_secret}} ${{inputs.release_name}} ${{inputs.chart_path}} --install --wait --atomic --namespace=${{inputs.namespace}} --values=${{inputs.values_file}} --create-namespace
           kubeconfig: "${{ secrets.KUBECONFIG }}"
           overrule_existing_kubeconfig: "true"
