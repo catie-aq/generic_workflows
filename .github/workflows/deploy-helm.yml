@@ -22,6 +22,11 @@ on:
         description: "Values File"
         required: false
         default: values.yaml
+      environment:
+        type: string
+        description: "Environment"
+        required: false
+        default: k8s_discodiode
       extra_args:
         type: string
         description: "Extra Arguments"
@@ -54,7 +59,7 @@ jobs:
   deployment:
     runs-on: "sonu-github-arc"
     container: "ubuntu:latest"
-    environment: k8s_discodiode
+    environment: ${{inputs.environment}}
     steps:
       - name: Install dependencies
         run: |
