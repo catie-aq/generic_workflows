@@ -4,7 +4,7 @@ titre: Redémarrage d'une application Derivus (SIDO)
 
 # Redémarrage d'une application Derivus (SIDO)
 
-Workflow spécifique au projet SIDO. Arrête une application Docker Compose déjà présente sur la machine du runner, remplace `IMAGE_TAG` dans son fichier `.env` par la version demandée, puis la relance.
+Workflow spécifique à l'équipe SIDO. Arrête une application Docker Compose déjà présente sur la machine du runner, remplace `IMAGE_TAG` dans son fichier `.env` par la version demandée, puis la relance.
 
 Fichier : `.github/workflows/sido-derivus-simple-deploy.yml` · Déclencheur : `workflow_call` · Runner : `ml`
 
