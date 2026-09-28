@@ -63,6 +63,6 @@ Aucune.
 
 ## Points d'attention
 
-- `actions/setup-python@v2` est une version ancienne (runtime Node dépréciée par GitHub).
+- `actions/setup-python@v2` est une version ancienne (runtime Node déprécié par GitHub).
 - Dans un workflow réutilisable, les `permissions` ne peuvent pas dépasser celles de l'appelant : l'appelant doit accorder `contents: write` et `pull-requests: write`.
 - La pull request est créée avec le `GITHUB_TOKEN` : elle ne déclenche pas les workflows `pull_request` du dépôt (règle GitHub).

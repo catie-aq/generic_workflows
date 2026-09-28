@@ -42,10 +42,9 @@ Ces workflows ont été supprimés du dépôt ; un appelant qui les référence 
 | Workflow | Supprimé au commit | Remplaçant | Encore appelé par |
 | -------------------- | ------------ | -------------------- | ---------------------------------------- |
 | `cruft.yaml` | `f51324c` | Aucun | `python_package-ci/.github/workflows/autoupdate.yml` |
-| `github-project.yml` | `f51324c` | Aucun | Aucun appelant connu |
 | `notion.yml` | `699ce03` | Aucun | `mbed_workflows/.github/workflows/notion.yml` |
 
-Leur documentation (`docs/cruft.md`, `docs/github-project.md` au commit `f51324c`, `docs/notion.md` au commit `b5fc258`) a été supprimée avec eux.
+Leur documentation (`docs/cruft.md` au commit `f51324c`, `docs/notion.md` au commit `b5fc258`) a été supprimée avec eux.
 
 ## Licence
 

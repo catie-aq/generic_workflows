@@ -66,4 +66,5 @@ Les sorties `bump` et `version` du workflow reprennent celles du job.
 - Pour `dependabot[bot]`, le job est ignoré et les sorties sont vides.
 - L'image `image` doit contenir `bash` (étape `shell: bash` de l'action `semver`).
 - La comparaison de versions de `semver` est approximative (points supprimés puis comparaison d'entiers) : voir les points d'attention de [semver](../semver/README.md).
-- À vérifier : `actions/checkout@v4` est appelé sans `fetch-depth: 0` ; que le dernier tag soit bien trouvé par `actions-ecosystem/action-get-latest-tag@v1` dans ce cas n'a pas été vérifié.
+
+> À vérifier : `actions/checkout@v4` est appelé sans `fetch-depth: 0` ; que le dernier tag soit bien trouvé par `actions-ecosystem/action-get-latest-tag@v1` dans ce cas n'a pas été vérifié.

@@ -54,4 +54,4 @@ Aucune.
 
 - Le nom du workflow (« Lint Dockerfile, Build Docker image, Scout Quickview ») ne correspond plus au code : seul le lint est fait. L'étape Docker Scout a été retirée au commit `b5b1824`, la construction de l'image au commit `59ff242`.
 - `hadolint/hadolint-action@master` suit une branche, pas une version figée.
-- `actions/checkout@v2` est une version ancienne (runtime Node dépréciée par GitHub).
+- `actions/checkout@v2` est une version ancienne (runtime Node déprécié par GitHub).

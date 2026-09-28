@@ -78,4 +78,5 @@ Aucune.
 
 - Le workflow ne déclare pas de `permissions` : pour la release sur tag, le `GITHUB_TOKEN` de l'appelant doit avoir `contents: write`.
 - La compilation dépend d'un miroir TeX Live externe (`ftp.math.utah.edu`, archives `tlnet-final`).
+- Le jeton `personal_access_token` est écrit en clair dans `~/.gitconfig` du conteneur (règle `insteadOf`), lisible par toutes les étapes suivantes.
 - Le secret `personal_access_token` est obligatoire même si `compile.sh` ne clone aucun dépôt privé.

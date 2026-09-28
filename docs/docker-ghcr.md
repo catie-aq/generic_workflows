@@ -90,6 +90,7 @@ Aucune.
 - `::set-output` est déprécié par GitHub (étapes `suffix` et `file`).
 - Les tests shell `[ ${{ inputs.target }} != "" ]` et `[ ${{ inputs.file }} == "" ]` ne mettent pas la valeur entre guillemets : quand l'entrée est vide, `[` échoue et c'est la branche `else` qui s'exécute. Le résultat reste correct (suffixe vide ; `file` vide, donc `Dockerfile` du contexte par défaut de `docker/build-push-action`), mais la branche `<Dockerfile>/Dockerfile` n'est jamais atteinte.
 - L'entrée `Dockerfile` désigne le contexte de construction, pas le Dockerfile.
-- `docker/login-action@v1` est une version ancienne (runtime Node dépréciée par GitHub).
+- `docker/login-action@v1` est une version ancienne (runtime Node déprécié par GitHub).
 - Les permissions du job (`packages: write`) doivent être accordées par l'appelant.
-- À vérifier : d'après la documentation de `docker/metadata-action`, le suffixe de `flavor` n'est pas appliqué au tag `latest` par défaut (`onlatest=false`) ; plusieurs `target` publiées depuis un même tag écriraient alors toutes `latest`.
+
+> À vérifier : d'après la documentation de `docker/metadata-action`, le suffixe de `flavor` n'est pas appliqué au tag `latest` par défaut (`onlatest=false`) ; plusieurs `target` publiées depuis un même tag écriraient alors toutes `latest`.
