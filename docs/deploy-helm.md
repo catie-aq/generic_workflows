@@ -73,5 +73,5 @@ Aucune.
 - Le job déclare un `environment` : si cet environment GitHub définit lui-même un secret `KUBECONFIG`, c'est ce secret qui est utilisé à la place de celui passé par l'appelant (comportement documenté par GitHub pour les workflows réutilisables).
 - La valeur par défaut de `environment` est un nom d'environment GitHub propre à un usage donné ; un appelant hors de cet usage doit passer sa propre valeur.
 - `extra_secret` et `extra_args` sont insérés tels quels dans la ligne de commande `helm`, sans échappement.
-- `actions/checkout@v3` est une version ancienne (runtime Node dépréciée par GitHub) ; l'image `ubuntu:latest` n'est pas figée.
+- `actions/checkout@v3` est une version ancienne (runtime Node déprécié par GitHub) ; l'image `ubuntu:latest` n'est pas figée.
 - `--atomic` annule la release en cas d'échec ; `--create-namespace` crée le namespace s'il n'existe pas.
