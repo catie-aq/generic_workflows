@@ -4,7 +4,7 @@ titre: Publication d'image Docker sur Nexus (SIDO)
 
 # Publication d'image Docker sur Nexus (SIDO)
 
-Workflow spécifique au projet SIDO. Construit l'image Docker du dépôt appelant et la pousse sur un registre Nexus sous le nom et le tag fournis.
+Workflow spécifique à l'équipe SIDO. Construit l'image Docker du dépôt appelant et la pousse sur un registre Nexus sous le nom et le tag fournis.
 
 Fichier : `.github/workflows/sido-docker-nexus.yml` · Déclencheur : `workflow_call` · Runner : `${{ inputs.workflow_host }}` (défaut `self-hosted`)
 
