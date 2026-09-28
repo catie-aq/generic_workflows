@@ -1,39 +1,14 @@
+---
+titre: Génération de PDF avec Pandoc
+---
+
 # Génération de PDF avec Pandoc
 
-Ce workflow GitHub Actions est déclenché lorsqu'un appel de workflow est effectué. Il compile des documents PDF avec Pandoc, publie les fichiers en artefacts, puis crée une release GitHub (draft) quand l'exécution est lancée sur un tag.
+Compile les documents Markdown du dépôt appelant en PDF via son script `compile.sh`, publie les PDF en artefact et, sur un tag, les joint à une release GitHub en brouillon.
 
-## Secrets
+Fichier : `.github/workflows/pandoc-pdf.yml` · Déclencheur : `workflow_call` · Runner : `sonu-github-arc`
 
-| nom                     | description                                                                                             | requis |
-|-------------------------|---------------------------------------------------------------------------------------------------------|--------|
-| `personal_access_token` | Token utilisé pour accéder aux dépôts privés de l'organisation (ex: dépendances, submodules, templates) | `true` |
-
-## Prérequis dans le dépôt appelant
-
-- Un script `compile.sh` à la racine du dépôt.
-- Le script doit générer les fichiers PDF dans `out/*.pdf`.
-- Le secret `personal_access_token` doit être défini dans le dépôt appelant.
-
-## Jobs
-
-Le workflow contient un seul job, `build`.
-
-### build
-
-Ce job s'exécute sur le runner `sonu-github-arc` dans le conteneur `pandoc/extra:3.9.0.0-alpine`.
-
-Les étapes pour ce job sont :
-
-- Extraire le code en utilisant `actions/checkout@v4`.
-- Installer les dépendances système (`bash`, `nodejs`, `npm`, `git`).
-- Configurer git avec le `personal_access_token` pour les dépôts privés de `github.com/${GITHUB_REPOSITORY_OWNER}`.
-- Détecter l'année TeX Live et configurer le miroir `tlnet-final` correspondant.
-- Installer les paquets TeX nécessaires via `tlmgr`.
-- Exécuter `bash compile.sh`.
-- Publier les PDF générés en artefacts (`actions/upload-artifact@v4`, nom `pdf-documents`, chemin `out/*.pdf`).
-- Créer une release GitHub draft sur tag avec `softprops/action-gh-release@v2`.
-
-## Exemple d'utilisation
+## Utilisation
 
 ```yaml
 name: Build PDF
@@ -47,9 +22,60 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
-    uses: catie-aq/generic_workflows/.github/workflows/pandoc-pdf.yml@add-md-latex-pdf-workflow
+    uses: catie-aq/generic_workflows/.github/workflows/pandoc-pdf.yml@main
     secrets:
       personal_access_token: ${{ secrets.PAT }}
 ```
+
+Prérequis dans le dépôt appelant :
+
+- un script `compile.sh` à la racine, exécuté avec `bash` ;
+- ce script écrit les PDF dans `out/*.pdf`.
+
+## Entrées
+
+| Nom | Type | Description | Requis | Défaut |
+| ------------ | ------- | ---------------------------------------- | ----- | ------------ |
+
+Aucune.
+
+## Secrets
+
+| Nom | Description | Requis |
+| ------------ | ---------------------------------------- | ----- |
+| `personal_access_token` | Jeton d'accès aux dépôts privés du propriétaire du dépôt (dépendances, sous-modules, gabarits clonés par `compile.sh`) | oui |
+
+## Sorties
+
+| Nom | Description |
+| ------------ | ---------------------------------------- |
+
+Aucune.
+
+## Fonctionnement
+
+Job `build` (runner `sonu-github-arc`, conteneur `pandoc/extra:3.9.0.0-alpine`) :
+
+1. `actions/checkout@v4`.
+2. `apk add --no-cache bash nodejs npm git`.
+3. `git config --global url."https://x-access-token:<personal_access_token>@github.com/<propriétaire>/".insteadOf "https://github.com/<propriétaire>/"` : les clones HTTPS des dépôts du propriétaire utilisent le jeton.
+4. Détection de l'année TeX Live (`tlmgr --version`) et choix du miroir `https://ftp.math.utah.edu/pub/tex/historic/systems/texlive/<année>/tlnet-final` ; échec si l'année n'est pas détectée.
+5. `tlmgr install placeins mathtools nomencl hyphenat lastpage lipsum newunicodechar pdfpages jknapltx raleway pdflscape rsfs soul`.
+6. `bash compile.sh`.
+7. `actions/upload-artifact@v4` : artefact `pdf-documents`, chemin `out/*.pdf`, échec si aucun fichier.
+8. Si `github.ref_type == 'tag'` : `softprops/action-gh-release@v2` avec `out/*.pdf`, `generate_release_notes: true`, `draft: true`, jeton `GITHUB_TOKEN`.
+
+## Dépendances
+
+Aucune.
+
+## Points d'attention
+
+- Le workflow ne déclare pas de `permissions` : pour la release sur tag, le `GITHUB_TOKEN` de l'appelant doit avoir `contents: write`.
+- La compilation dépend d'un miroir TeX Live externe (`ftp.math.utah.edu`, archives `tlnet-final`).
+- Le secret `personal_access_token` est obligatoire même si `compile.sh` ne clone aucun dépôt privé.

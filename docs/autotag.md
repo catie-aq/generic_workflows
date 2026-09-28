@@ -1,36 +1,69 @@
-# Publier un nouveau tag et une pre-release lorsque la version est augmentée
+---
+titre: Tag automatique de version
+---
 
-Ce workflow GitHub Actions est conçu pour être déclenché sur pull request. Il a trois entrées et deux sorties.
+# Tag automatique de version
+
+Lit la version courante d'un paquet, la compare au dernier tag semver du dépôt et, si elle est plus récente, crée et pousse un tag portant cette version. À appeler après une montée de version, par exemple sur `push` vers `main`.
+
+Fichier : `.github/workflows/autotag.yml` · Déclencheur : `workflow_call` · Runner : `group: default`
+
+## Utilisation
+
+```yaml
+jobs:
+  tag:
+    uses: catie-aq/generic_workflows/.github/workflows/autotag.yml@main
+    with:
+      image: python:3.12
+      version_cmd: python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])"
+```
 
 ## Entrées
 
-| nom           | description                          | requis | par défaut |
-| ------------- | ------------------------------------ | ------ | ---------- |
-| `image`       | Le nom de l'image à construire       | `true` |            |
-| `extra_cmd`   | Commande supplémentaire à exécuter avant le tag. Par exemple, pour installer des dépendances. | `false` | |
-| `version_cmd` | Commande pour obtenir la version actuelle d'un package | `true` | |
+| Nom | Type | Description | Requis | Défaut |
+| ------------ | ------- | ---------------------------------------- | ----- | ------------ |
+| `image` | string | Image du conteneur dans lequel s'exécute le job | oui | |
+| `extra_cmd` | string | Commande supplémentaire exécutée avant la lecture de la version (installation de dépendances, par exemple) | non | |
+| `version_cmd` | string | Commande qui affiche la version courante du paquet sur la sortie standard | oui | |
+
+## Secrets
+
+| Nom | Description | Requis |
+| ------------ | ---------------------------------------- | ----- |
+
+Aucune.
 
 ## Sorties
 
-| nom           | description                          |
-| ------------- | ------------------------------------ |
-| `bump`        | Indique si la version a été augmentée ou non |
-| `version`     | La nouvelle version |
+| Nom | Description |
+| ------------ | ---------------------------------------- |
+| `bump` | `true` si la version est plus récente que le dernier tag (tag créé), `false` sinon |
+| `version` | Version renvoyée par `version_cmd` |
 
-## Jobs
+## Fonctionnement
 
-Le workflow contient un seul job, `bump-tag`.
+Job `bump-tag` (runner `group: default`, conteneur `${{ inputs.image }}`), ignoré si `github.actor` vaut `dependabot[bot]` :
 
-### bump-tag
+1. `actions/checkout@v4`.
+2. Si `extra_cmd` est renseigné : exécution de `extra_cmd`.
+3. Étape `get_version` : exécute `version_cmd` et publie le résultat en sortie `version` via `echo ::set-output name=version::...`.
+4. Étape `semver` : action composite `catie-aq/generic_workflows/semver@main` avec `version`, qui renvoie `bump`.
+5. Si `bump` vaut `true` : `mathieudutour/github-tag-action@v6.2` avec `github_token: ${{ secrets.GITHUB_TOKEN }}`, `custom_tag` = la version et `tag_prefix: ""` (tag sans préfixe `v`).
 
-Ce job est exécuté si l'acteur GitHub n'est pas `dependabot[bot]`. Il s'exécute sur le groupe par défaut dans un conteneur spécifié par `inputs.image`.
+Les sorties `bump` et `version` du workflow reprennent celles du job.
 
-Les étapes pour ce job sont :
+## Dépendances
 
-- Extraire le code en utilisant l'action `actions/checkout@v4`.
-- Installer les dépendances si `inputs.extra_cmd` est fourni.
-- Obtenir la version actuelle du package en utilisant `inputs.version_cmd`.
-- Vérifier la version en utilisant l'action `semver` du dépôt `catie-aq/generic_workflows`.
-- Si la sortie `bump` de l'étape `semver` est `true`, augmenter la version et pousser la balise en utilisant l'action `mathieudutour/github-tag-action@v6.1`.
+- `catie-aq/generic_workflows/semver@main` (action composite de ce dépôt, voir [semver](../semver/README.md)).
 
-Les sorties du job sont `bump` et `version`, qui sont respectivement les sorties des étapes `semver` et `get_version`.
+## Points d'attention
+
+- `::set-output` est déprécié par GitHub (étape `get_version`, et aussi dans l'action `semver`) ; à remplacer par `$GITHUB_OUTPUT`.
+- Le nom du workflow parle de « pre-release », mais seul un tag est créé : aucune release GitHub n'est publiée.
+- Le workflow ne déclare pas de `permissions` : le `GITHUB_TOKEN` de l'appelant doit avoir `contents: write` pour pousser le tag.
+- Un tag poussé avec le `GITHUB_TOKEN` ne déclenche pas d'autre workflow (règle GitHub) : un workflow `on: push: tags` du dépôt ne partira pas.
+- Pour `dependabot[bot]`, le job est ignoré et les sorties sont vides.
+- L'image `image` doit contenir `bash` (étape `shell: bash` de l'action `semver`).
+- La comparaison de versions de `semver` est approximative (points supprimés puis comparaison d'entiers) : voir les points d'attention de [semver](../semver/README.md).
+- À vérifier : `actions/checkout@v4` est appelé sans `fetch-depth: 0` ; que le dernier tag soit bien trouvé par `actions-ecosystem/action-get-latest-tag@v1` dans ce cas n'a pas été vérifié.
