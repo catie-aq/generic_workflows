@@ -1,25 +1,61 @@
-# Test du template Cookiecutter
+---
+titre: Test d'un template Cookiecutter
+---
 
-Ce workflow GitHub Actions est conçu pour être déclenché sur une crontab. Il a deux entrées : `config-file` et `python-version`.
+# Test d'un template Cookiecutter
+
+Vérifie qu'un template Cookiecutter (le dépôt appelant) se génère sans erreur, sans interaction, avec ou sans fichier de configuration. À appeler depuis la CI du dépôt du template.
+
+Fichier : `.github/workflows/cookiecutter.yml` · Déclencheur : `workflow_call` · Runner : `group: default`
+
+## Utilisation
+
+```yaml
+jobs:
+  cookiecutter:
+    uses: catie-aq/generic_workflows/.github/workflows/cookiecutter.yml@main
+    with:
+      config-file: tests/config.yaml
+      python-version: "3.12"
+```
 
 ## Entrées
 
-| nom             | description                          | requis | par défaut |
-| --------------- | ------------------------------------ | ------ | ---------- |
-| `config-file`   | Fichier de configuration pour Cookiecutter | `false` | |
-| `python-version`| Version de Python à utiliser | `false` | `3.10` |
+| Nom | Type | Description | Requis | Défaut |
+| ------------ | ------- | ---------------------------------------- | ----- | ------------ |
+| `config-file` | string | Fichier de configuration passé à `cookiecutter --config-file` (pas de description dans le code) | non | |
+| `python-version` | string | Version de Python, utilisée comme tag de l'image `python` (pas de description dans le code) | non | `3.10` |
 
-## Jobs
+## Secrets
 
-Le workflow contient un seul job, `build`.
+| Nom | Description | Requis |
+| ------------ | ---------------------------------------- | ----- |
 
-### build
+Aucune.
 
-Ce job s'exécute sur le groupe par défaut dans un conteneur avec l'image `python:${{ inputs.python-version }}`.
+## Sorties
 
-Les étapes pour ce job sont :
+| Nom | Description |
+| ------------ | ---------------------------------------- |
 
-- Extraire le code en utilisant l'action `actions/checkout@v3`.
-- Installer Cookiecutter.
-- Exécuter Cookiecutter avec le fichier de configuration si `inputs.config-file` est fourni.
-- Exécuter Cookiecutter sans fichier de configuration si `inputs.config-file` n'est pas fourni.
+Aucune.
+
+## Fonctionnement
+
+Permissions déclarées au niveau du workflow : `read-all`.
+
+Job `build` (runner `group: default`, conteneur `python:${{ inputs.python-version }}`) :
+
+1. `actions/checkout@v4`.
+2. `pip install cookiecutter`.
+3. Si `config-file` est renseigné : `cookiecutter . --no-input --config-file <config-file>`.
+4. Sinon : `cookiecutter . --no-input`.
+
+## Dépendances
+
+Aucune.
+
+## Points d'attention
+
+- Les entrées n'ont pas de `description` dans le code.
+- La version de Cookiecutter n'est pas figée (`pip install cookiecutter`).
