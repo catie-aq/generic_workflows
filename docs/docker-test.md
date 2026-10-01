@@ -46,6 +46,26 @@ Job `check-dockerfile` (runner `sonu-github-arc`, sans conteneur) :
 1. `actions/checkout@v2`.
 2. `hadolint/hadolint-action@master` avec `dockerfile`, `failure-threshold: warning` et `ignore`.
 
+## Choix de hadolint
+
+Hadolint compare chaque instruction du Dockerfile aux bonnes pratiques Docker : version d'image de base figée plutôt que `latest`, utilisateur non root, commandes `RUN` regroupées, cache des gestionnaires de paquets nettoyé. Il est léger, rapide et ses règles s'ignorent une par une (entrée `ignore`), d'où son adoption en CI.
+
+Limites :
+
+- il analyse le texte du Dockerfile, pas l'image construite ni le conteneur en exécution ;
+- il ne remplace pas un scanner de vulnérabilités (Trivy, Clair) ;
+- certaines règles sont trop strictes selon le contexte : les ignorer explicitement plutôt que baisser le seuil.
+
+Pour l'exécuter en local avant commit, hook pre-commit :
+
+```yaml
+repos:
+  - repo: https://github.com/hadolint/hadolint
+    rev: v2.12.0
+    hooks:
+      - id: hadolint
+```
+
 ## Dépendances
 
 Aucune.
