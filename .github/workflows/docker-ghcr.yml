@@ -17,6 +17,11 @@ on:
         type: string
         description: "Target for the Dockerfile"
         required: false
+      sha_tag:
+        type: boolean
+        description: "Also push an immutable tag sha-<full commit sha> (plus target suffix), to deploy a precise build"
+        required: false
+        default: false
 
     secrets:
       build_args:
@@ -89,6 +94,13 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           flavor: |
             suffix=${{ steps.suffix.outputs.target }}
+          # Default entries of metadata-action, plus the optional sha tag.
+          tags: |
+            type=schedule
+            type=ref,event=branch
+            type=ref,event=tag
+            type=ref,event=pr
+            type=sha,format=long,enable=${{ inputs.sha_tag }}
 
       - name: Set file location
         id: file

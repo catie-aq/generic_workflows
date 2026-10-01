@@ -9,6 +9,9 @@ Ce workflow GitHub Actions est conçu pour publier une image Docker sur GitHub C
   - Par défaut : `"."`
 - `target` : (Facultatif) Cible pour le Dockerfile.
   - Type : `string`
+- `sha_tag` : (Facultatif) Publie en plus un tag immuable `sha-<sha complet du commit>` (suffixé par `-target` si une `target` est donnée), pour déployer un build précis (`--set image.tag=sha-${{ github.sha }}`).
+  - Type : `boolean`
+  - Par défaut : `false`
 
 ## Secrets
 
@@ -56,5 +59,7 @@ Les images Docker sont nommées en fonction de l'événement déclencheur et de 
 | `push tag`           | `refs/tags/v1.2.3`        | `v1.2.3`, `latest`           |
 | `push tag`           | `refs/tags/v2.0.8-beta.67`| `v2.0.8-beta.67`, `latest`   |
 | `workflow_dispatch`  | `refs/heads/master`       | `master`                     |
+
+Avec `sha_tag: true`, chaque build ajoute le tag `sha-<sha complet>` (ex. `sha-3adda15…`).
 
 Si une `target` est donnée, le nom sera suffixé par `-target`.
