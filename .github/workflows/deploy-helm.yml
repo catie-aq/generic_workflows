@@ -154,10 +154,10 @@ jobs:
           jq -r ".[] | $not_ok | $describe" "$work/pods.json" > "$work/pods.txt"
           if [ -s "$work/pods.txt" ]; then cat "$work/pods.txt"; else echo "Aucun."; fi
 
-          jq -n --slurpfile p "$work/pods.json" --slurpfile w "$work/workloads.json" '
-            [$p[0][] | .metadata.name, .metadata.ownerReferences[]?.name,
+          jq -n --slurpfile p "$work/pods.json" --slurpfile w "$work/workloads.json" "
+            [\$p[0][] | $not_ok | .metadata.name, .metadata.ownerReferences[]?.name,
               (.spec.volumes[]?.persistentVolumeClaim.claimName // empty)]
-            + [$w[0][] | .metadata.name] | unique' > "$work/names.json"
+            + [\$w[0][] | .metadata.name] | unique" > "$work/names.json"
           echo
           echo "== Événements"
           kc get events -o json | jq -r --slurpfile names "$work/names.json" '
@@ -176,7 +176,7 @@ jobs:
             jq -r ".[] | $not_ok | .metadata.name as \$p
               | ((.status.initContainerStatuses // []) + (.status.containerStatuses // [])) | .[]
               | select(.state.running or .state.terminated or .lastState.terminated)
-              | \"\(\$p) \(.name) \(if .lastState.terminated then 1 else 0 end)\"" "$work/pods.json" \
+              | \"\(\$p) \(.name) \(if .state.running and .lastState.terminated then 1 else 0 end)\"" "$work/pods.json" \
               | head -n 20 | while read -r pod container restarted; do
                 echo "::group::$pod [$container]"
                 kc logs "$pod" -c "$container" --tail="$LOG_LINES" --timestamps 2>&1
