@@ -84,17 +84,35 @@ jobs:
       - name: Deploy
         id: deploy
         uses: WyriHaximus/github-action-helm3@v3
+        env:
+          RELEASE: ${{ inputs.release_name }}
+          NAMESPACE: ${{ inputs.namespace }}
         with:
-          exec: helm upgrade ${{inputs.extra_args}} ${{secrets.extra_secret}} ${{inputs.release_name}} ${{inputs.chart_path}} --install --wait --namespace=${{inputs.namespace}} --values=${{inputs.values_file}} --create-namespace
+          # Dernière révision avant l'upgrade : Diagnostic et Rollback n'agissent que si l'upgrade en a créé une.
+          exec: |
+            err=$(mktemp)
+            if history=$(helm history "$RELEASE" --namespace "$NAMESPACE" --max 1 --output json 2>"$err"); then
+              revision=$(printf '%s' "$history" | jq -r 'max_by(.revision) | .revision')
+            elif grep -q 'release: not found' "$err"; then
+              revision=0
+            fi
+            if ! [[ "${revision:-}" =~ ^[0-9]+$ ]]; then
+              cat "$err" >&2
+              echo "::error::Historique de la release $RELEASE illisible, déploiement annulé."
+              exit 1
+            fi
+            echo "revision=$revision" >> "$GITHUB_OUTPUT"
+            helm upgrade ${{inputs.extra_args}} ${{secrets.extra_secret}} ${{inputs.release_name}} ${{inputs.chart_path}} --install --wait --namespace=${{inputs.namespace}} --values=${{inputs.values_file}} --create-namespace
           kubeconfig: "${{ secrets.KUBECONFIG }}"
           overrule_existing_kubeconfig: "true"
       - name: Diagnostic
-        if: ${{ failure() && steps.deploy.outcome == 'failure' }}
+        if: ${{ failure() && steps.deploy.outcome == 'failure' && steps.deploy.outputs.revision != '' }}
         continue-on-error: true
         env:
           KUBECONFIG_CONTENT: ${{ secrets.KUBECONFIG }}
           RELEASE: ${{ inputs.release_name }}
           NAMESPACE: ${{ inputs.namespace }}
+          BEFORE: ${{ steps.deploy.outputs.revision }}
           # Logs des conteneurs masqués pour un dépôt public : les logs Actions y sont publics.
           SHOW_LOGS: ${{ github.event.repository.private == true }}
           KUBECTL_VERSION: v1.29.15
@@ -111,6 +129,12 @@ jobs:
           chmod +x /usr/local/bin/kubectl
           set +e
           kc() { kubectl --kubeconfig "$work/kubeconfig" --namespace "$NAMESPACE" "$@"; }
+
+          latest=$(kc get secrets -l "owner=helm,name=$RELEASE" -o json | jq '[.items[].metadata.labels.version | tonumber] | max // 0')
+          if [ -n "$latest" ] && [ "$latest" -le "$BEFORE" ]; then
+            echo "Aucune révision créée par ce déploiement (échec avant l'application du chart, ou --dry-run) : pas de relevé."
+            exit 0
+          fi
 
           echo "Relevé du namespace $NAMESPACE avant retour arrière de la release $RELEASE."
           echo
@@ -192,42 +216,57 @@ jobs:
             echo "### Échec du déploiement de \`$RELEASE\` ($NAMESPACE)"
             echo
             echo "Pods non prêts au moment de l'échec :"
-            echo '```'
+            echo '````'
             if [ -s "$work/pods.txt" ]; then cat "$work/pods.txt"; else echo "Aucun."; fi
-            echo '```'
+            echo '````'
             echo "Derniers événements Warning :"
-            echo '```'
+            echo '````'
             grep -F ' Warning ' "$work/events.txt" | tail -n 10 || echo "Aucun."
-            echo '```'
+            echo '````'
             echo "Détail et logs : étape Diagnostic du job."
           } >> "$GITHUB_STEP_SUMMARY"
       - name: Rollback
-        if: ${{ failure() && steps.deploy.outcome == 'failure' }}
+        if: ${{ failure() && steps.deploy.outcome == 'failure' && steps.deploy.outputs.revision != '' }}
         uses: WyriHaximus/github-action-helm3@v3
         env:
           RELEASE: ${{ inputs.release_name }}
           NAMESPACE: ${{ inputs.namespace }}
           EXTRA_ARGS: ${{ inputs.extra_args }}
+          BEFORE: ${{ steps.deploy.outputs.revision }}
         with:
           # Reproduit le retour arrière de --atomic : dernière révision réussie, ou désinstallation.
           exec: |
             set -uo pipefail
             timeout=$(printf '%s\n' "$EXTRA_ARGS" | grep -oE -- '--timeout(=| +)[^ ]+' | tail -n 1 | sed -E 's/--timeout(=| +)//')
             timeout=${timeout:-5m0s}
-            if ! history=$(helm history "$RELEASE" --namespace "$NAMESPACE" --max 256 --output json 2>&1); then
-              echo "Release absente : rien à annuler. ($history)"
-              exit 0
+            err=$(mktemp)
+            if ! history=$(helm history "$RELEASE" --namespace "$NAMESPACE" --max 256 --output json 2>"$err"); then
+              if grep -q 'release: not found' "$err"; then
+                echo "Release absente : rien à annuler."
+                exit 0
+              fi
+              cat "$err" >&2
+              echo "::error::Historique de la release $RELEASE illisible, retour arrière impossible."
+              exit 1
             fi
-            status=$(printf '%s' "$history" | jq -r 'max_by(.revision) | .status')
+            read -r revision status < <(printf '%s' "$history" | jq -r 'max_by(.revision) | "\(.revision) \(.status)"')
+            if ! [[ "${revision:-}" =~ ^[0-9]+$ ]]; then
+              echo "::error::Historique de la release $RELEASE illisible, retour arrière impossible."
+              exit 1
+            fi
             case "$status" in
-              failed) ;;
               pending-*)
                 echo "::warning::Release $RELEASE en $status : une autre opération Helm est en cours, pas de retour arrière."
                 exit 0 ;;
-              *)
-                echo "Dernière révision en $status : la release n'a pas été modifiée, rien à annuler."
-                exit 0 ;;
             esac
+            if [ "$revision" -le "$BEFORE" ]; then
+              echo "Aucune révision créée par ce déploiement (dernière : $revision, $status) : rien à annuler."
+              exit 0
+            fi
+            if [ "$status" != failed ]; then
+              echo "Révision $revision en $status : rien à annuler."
+              exit 0
+            fi
             target=$(printf '%s' "$history" | jq -r '[.[] | select(.status == "deployed" or .status == "superseded")] | max_by(.revision) | .revision // empty')
             if [ -z "$target" ]; then
               echo "Aucune révision réussie : désinstallation de $RELEASE (délai $timeout)."
