@@ -64,7 +64,7 @@ jobs:
       - name: Install dependencies
         run: |
           apt update
-          apt install -y curl
+          apt install -y curl jq
       - uses: actions/checkout@v3
       - name: Install Charts
         if: ${{inputs.update}}
@@ -80,9 +80,200 @@ jobs:
           exec: helm repo update
           kubeconfig: "${{ secrets.KUBECONFIG }}"
           overrule_existing_kubeconfig: "true"
+      # Pas de --atomic : son retour arrière effacerait les pods avant l'étape Diagnostic.
       - name: Deploy
+        id: deploy
         uses: WyriHaximus/github-action-helm3@v3
+        env:
+          RELEASE: ${{ inputs.release_name }}
+          NAMESPACE: ${{ inputs.namespace }}
         with:
-          exec: helm upgrade ${{inputs.extra_args}} ${{secrets.extra_secret}} ${{inputs.release_name}} ${{inputs.chart_path}} --install --wait --atomic --namespace=${{inputs.namespace}} --values=${{inputs.values_file}} --create-namespace
+          # Dernière révision avant l'upgrade : Diagnostic et Rollback n'agissent que si l'upgrade en a créé une.
+          exec: |
+            err=$(mktemp)
+            if history=$(helm history "$RELEASE" --namespace "$NAMESPACE" --max 1 --output json 2>"$err"); then
+              revision=$(printf '%s' "$history" | jq -r 'max_by(.revision) | .revision')
+            elif grep -q 'release: not found' "$err"; then
+              revision=0
+            fi
+            if ! [[ "${revision:-}" =~ ^[0-9]+$ ]]; then
+              cat "$err" >&2
+              echo "::error::Historique de la release $RELEASE illisible, déploiement annulé."
+              exit 1
+            fi
+            echo "revision=$revision" >> "$GITHUB_OUTPUT"
+            helm upgrade ${{inputs.extra_args}} ${{secrets.extra_secret}} ${{inputs.release_name}} ${{inputs.chart_path}} --install --wait --namespace=${{inputs.namespace}} --values=${{inputs.values_file}} --create-namespace
+          kubeconfig: "${{ secrets.KUBECONFIG }}"
+          overrule_existing_kubeconfig: "true"
+      - name: Diagnostic
+        if: ${{ failure() && steps.deploy.outcome == 'failure' && steps.deploy.outputs.revision != '' }}
+        continue-on-error: true
+        env:
+          KUBECONFIG_CONTENT: ${{ secrets.KUBECONFIG }}
+          RELEASE: ${{ inputs.release_name }}
+          NAMESPACE: ${{ inputs.namespace }}
+          BEFORE: ${{ steps.deploy.outputs.revision }}
+          # Logs des conteneurs masqués pour un dépôt public : les logs Actions y sont publics.
+          SHOW_LOGS: ${{ github.event.repository.private == true }}
+          KUBECTL_VERSION: v1.29.15
+          LOG_LINES: "50"
+        shell: bash
+        run: |
+          set -euo pipefail
+          work=$(mktemp -d)
+          trap 'rm -rf "$work"' EXIT
+          printf '%s\n' "$KUBECONFIG_CONTENT" > "$work/kubeconfig"
+          url="https://dl.k8s.io/release/$KUBECTL_VERSION/bin/linux/$(dpkg --print-architecture)/kubectl"
+          curl -fsSLo /usr/local/bin/kubectl "$url"
+          echo "$(curl -fsSL "$url.sha256")  /usr/local/bin/kubectl" | sha256sum --check --quiet
+          chmod +x /usr/local/bin/kubectl
+          set +e
+          kc() { kubectl --kubeconfig "$work/kubeconfig" --namespace "$NAMESPACE" "$@"; }
+
+          latest=$(kc get secrets -l "owner=helm,name=$RELEASE" -o json | jq '[.items[].metadata.labels.version | tonumber] | max // 0')
+          if [ -n "$latest" ] && [ "$latest" -le "$BEFORE" ]; then
+            echo "Aucune révision créée par ce déploiement (échec avant l'application du chart, ou --dry-run) : pas de relevé."
+            exit 0
+          fi
+
+          echo "Relevé du namespace $NAMESPACE avant retour arrière de la release $RELEASE."
+          echo
+          echo "== Révisions"
+          kc get secrets -l "owner=helm,name=$RELEASE" -o json | jq -r '
+            .items | sort_by(.metadata.labels.version | tonumber) | .[-5:][]
+            | "révision \(.metadata.labels.version) : \(.metadata.labels.status)"'
+
+          kc get deployments,statefulsets,daemonsets,jobs -o json | jq --arg r "$RELEASE" '
+            [.items[] | select(.metadata.annotations["meta.helm.sh/release-name"] == $r
+              or .metadata.labels["app.kubernetes.io/instance"] == $r)]' > "$work/workloads.json"
+          echo
+          echo "== Charges de travail"
+          jq -r '.[] | "\(.kind)/\(.metadata.name) : " + (
+            if .kind == "Job" then "\(.status.succeeded // 0) réussi(s), \(.status.failed // 0) en échec, \(.status.active // 0) en cours"
+            elif .kind == "DaemonSet" then "\(.status.numberReady // 0)/\(.status.desiredNumberScheduled // 0) prêt(s)"
+            else "\(.status.readyReplicas // 0)/\(.spec.replicas // 0) prêt(s), \(.status.updatedReplicas // 0) à jour" end)' "$work/workloads.json"
+
+          jq -r '.[] | .spec.selector.matchLabels // {} | to_entries
+            | map("\(.key)=\(.value)") | join(",") | select(. != "")' "$work/workloads.json" | sort -u > "$work/selectors"
+          [ -s "$work/selectors" ] || echo "app.kubernetes.io/instance=$RELEASE" > "$work/selectors"
+          while read -r selector; do
+            kc get pods -l "$selector" -o json | jq -c '.items[]'
+          done < "$work/selectors" | jq -s 'unique_by(.metadata.name)' > "$work/pods.json"
+
+          not_ok='select(.status.phase != "Succeeded" and (.status.phase == "Failed"
+            or ([.status.conditions[]? | select(.type == "Ready") | .status] != ["True"])))'
+          describe='.metadata.name as $p
+            | "\($p) : \(.status.phase), nœud \(.spec.nodeName // "aucun")",
+              (((.status.initContainerStatuses // []) | map(. + {init: true})) + (.status.containerStatuses // [])
+                | .[] | "  \(if .init then "init " else "" end)\(.name) : "
+                + (if .state.waiting then "en attente (\(.state.waiting.reason // "?"))" + (if .state.waiting.message then " " + .state.waiting.message else "" end)
+                  elif .state.running then "démarré, " + (if .ready then "prêt" else "pas prêt" end)
+                  elif .state.terminated then "terminé (\(.state.terminated.reason // "?"), code \(.state.terminated.exitCode))"
+                  else "état inconnu" end)
+                + (if .restartCount > 0 then ", \(.restartCount) redémarrage(s)" else "" end)
+                + (if .lastState.terminated then ", arrêt précédent : \(.lastState.terminated.reason // "?") code \(.lastState.terminated.exitCode)" else "" end)),
+              (.status.conditions // [] | .[] | select(.status != "True" and .message) | "  \(.type) : \(.message)")'
+          echo
+          echo "== Pods non prêts"
+          jq -r ".[] | $not_ok | $describe" "$work/pods.json" > "$work/pods.txt"
+          if [ -s "$work/pods.txt" ]; then cat "$work/pods.txt"; else echo "Aucun."; fi
+
+          jq -n --slurpfile p "$work/pods.json" --slurpfile w "$work/workloads.json" "
+            [\$p[0][] | $not_ok | .metadata.name, .metadata.ownerReferences[]?.name,
+              (.spec.volumes[]?.persistentVolumeClaim.claimName // empty)]
+            + [\$w[0][] | .metadata.name] | unique" > "$work/names.json"
+          echo
+          echo "== Événements"
+          kc get events -o json | jq -r --slurpfile names "$work/names.json" '
+            .items | map(select(.involvedObject.name as $n | $names[0] | index($n)))
+            | sort_by(.lastTimestamp // .eventTime // .metadata.creationTimestamp) | .[-40:][]
+            | "\(.lastTimestamp // .eventTime) \(.type) \(.reason) \(.involvedObject.kind)/\(.involvedObject.name)"
+              + (if (.count // 1) > 1 then " (x\(.count))" else "" end) + " : \(.message)"' | tee "$work/events.txt"
+
+          echo
+          echo "== Logs des pods non prêts ($LOG_LINES dernières lignes par conteneur)"
+          if [ "$SHOW_LOGS" != "true" ]; then
+            echo "Dépôt public : logs des conteneurs non affichés."
+          elif [ ! -s "$work/pods.txt" ]; then
+            echo "Aucun."
+          else
+            jq -r ".[] | $not_ok | .metadata.name as \$p
+              | ((.status.initContainerStatuses // []) + (.status.containerStatuses // [])) | .[]
+              | select(.state.running or .state.terminated or .lastState.terminated)
+              | \"\(\$p) \(.name) \(if .state.running and .lastState.terminated then 1 else 0 end)\"" "$work/pods.json" \
+              | head -n 20 | while read -r pod container restarted; do
+                echo "::group::$pod [$container]"
+                kc logs "$pod" -c "$container" --tail="$LOG_LINES" --timestamps 2>&1
+                if [ "$restarted" = 1 ]; then
+                  echo "--- exécution précédente"
+                  kc logs "$pod" -c "$container" --previous --tail="$LOG_LINES" --timestamps 2>&1
+                fi
+                echo "::endgroup::"
+              done
+          fi
+
+          {
+            echo "### Échec du déploiement de \`$RELEASE\` ($NAMESPACE)"
+            echo
+            echo "Pods non prêts au moment de l'échec :"
+            echo '````'
+            if [ -s "$work/pods.txt" ]; then cat "$work/pods.txt"; else echo "Aucun."; fi
+            echo '````'
+            echo "Derniers événements Warning :"
+            echo '````'
+            grep -F ' Warning ' "$work/events.txt" | tail -n 10 || echo "Aucun."
+            echo '````'
+            echo "Détail et logs : étape Diagnostic du job."
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Rollback
+        if: ${{ failure() && steps.deploy.outcome == 'failure' && steps.deploy.outputs.revision != '' }}
+        uses: WyriHaximus/github-action-helm3@v3
+        env:
+          RELEASE: ${{ inputs.release_name }}
+          NAMESPACE: ${{ inputs.namespace }}
+          EXTRA_ARGS: ${{ inputs.extra_args }}
+          BEFORE: ${{ steps.deploy.outputs.revision }}
+        with:
+          # Reproduit le retour arrière de --atomic : dernière révision réussie, ou désinstallation.
+          exec: |
+            set -uo pipefail
+            timeout=$(printf '%s\n' "$EXTRA_ARGS" | grep -oE -- '--timeout(=| +)[^ ]+' | tail -n 1 | sed -E 's/--timeout(=| +)//')
+            timeout=${timeout:-5m0s}
+            err=$(mktemp)
+            if ! history=$(helm history "$RELEASE" --namespace "$NAMESPACE" --max 256 --output json 2>"$err"); then
+              if grep -q 'release: not found' "$err"; then
+                echo "Release absente : rien à annuler."
+                exit 0
+              fi
+              cat "$err" >&2
+              echo "::error::Historique de la release $RELEASE illisible, retour arrière impossible."
+              exit 1
+            fi
+            read -r revision status < <(printf '%s' "$history" | jq -r 'max_by(.revision) | "\(.revision) \(.status)"')
+            if ! [[ "${revision:-}" =~ ^[0-9]+$ ]]; then
+              echo "::error::Historique de la release $RELEASE illisible, retour arrière impossible."
+              exit 1
+            fi
+            case "$status" in
+              pending-*)
+                echo "::warning::Release $RELEASE en $status : une autre opération Helm est en cours, pas de retour arrière."
+                exit 0 ;;
+            esac
+            if [ "$revision" -le "$BEFORE" ]; then
+              echo "Aucune révision créée par ce déploiement (dernière : $revision, $status) : rien à annuler."
+              exit 0
+            fi
+            if [ "$status" != failed ]; then
+              echo "Révision $revision en $status : rien à annuler."
+              exit 0
+            fi
+            target=$(printf '%s' "$history" | jq -r '[.[] | select(.status == "deployed" or .status == "superseded")] | max_by(.revision) | .revision // empty')
+            if [ -z "$target" ]; then
+              echo "Aucune révision réussie : désinstallation de $RELEASE (délai $timeout)."
+              helm uninstall "$RELEASE" --namespace "$NAMESPACE" --wait --timeout "$timeout"
+            else
+              echo "Retour à la révision $target de $RELEASE (délai $timeout)."
+              helm rollback "$RELEASE" "$target" --namespace "$NAMESPACE" --wait --timeout "$timeout"
+            fi
           kubeconfig: "${{ secrets.KUBECONFIG }}"
           overrule_existing_kubeconfig: "true"
