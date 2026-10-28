@@ -46,8 +46,7 @@ jobs:
 
 | Nom | Description |
 | ------------ | ---------------------------------------- |
-
-Aucune.
+| `digest` | Digest de l'image poussée (`sha256:…`), pour déployer exactement ce build |
 
 ## Fonctionnement
 
@@ -61,8 +60,18 @@ Job `publish` (runner `sonu-github-arc`, sans conteneur, permissions `contents: 
 4. Étape `suffix` : calcule `-<target>` (ou vide) via `::set-output`.
 5. `docker/metadata-action` (épinglé au commit `9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7`) sur `ghcr.io/<dépôt>`, avec `flavor: suffix=<suffixe>` et les règles `tags:` `type=schedule`, `type=ref,event=branch`, `type=ref,event=tag`, `type=ref,event=pr` (règles par défaut de l'action) et `type=sha,format=long`, active seulement si `sha_tag` vaut `true`.
 6. Étape `file` : calcule le chemin du Dockerfile via `::set-output`.
-7. `docker/setup-buildx-action@v4`.
-8. `docker/build-push-action@v6` : `context` = `Dockerfile`, `file`, `push: true`, tags et labels de l'étape 5, `target`, `build-args` = `build_args`, `secrets` = `build_secrets`.
+7. Étape `cache` : calcule le package de cache `<dépôt>-buildcache` (en minuscules) et sa référence `ghcr.io/<propriétaire>/<dépôt>-buildcache:<target ou default>`.
+8. `docker/setup-buildx-action@v4`.
+9. `docker/build-push-action@v6` (id `build`) : `context` = `Dockerfile`, `file`, `push: true`, tags et labels de l'étape 5, `target`, `build-args` = `build_args`, `secrets` = `build_secrets`, `cache-from` et `cache-to` sur la référence de l'étape 7 (voir « Cache de construction »).
+10. `actions/delete-package-versions@v5` supprime les versions sans tag du package de cache (`continue-on-error`).
+
+### Cache de construction
+
+Les runners ARC sont jetables : sans cache externe, chaque build rejoue toutes les couches du Dockerfile. BuildKit lit donc son cache sur ghcr avant le build (`cache-from`) et l'y réécrit après (`cache-to`, `mode=max` pour garder aussi les couches des étapes intermédiaires, `image-manifest=true` et `oci-mediatypes=true` pour un manifeste que ghcr accepte). Une couche dont les entrées n'ont pas changé (fichier de dépendances, instructions qui la précèdent) est téléchargée au lieu d'être reconstruite.
+
+Le cache vit dans un package distinct de l'image, `<dépôt>-buildcache`, avec un tag par `target`. Chaque build écrase ce tag et laisse l'ancien manifeste sans tag ; l'étape 10 purge ces versions. Comme le package est séparé, la purge ne touche jamais les versions de l'image elle-même, qui peuvent rester déployées par digest.
+
+Un échec d'écriture du cache (`ignore-error=true`) ou de la purge (`continue-on-error`) ne fait pas échouer la publication.
 
 ### Tags produits
 
@@ -92,5 +101,7 @@ Aucune.
 - L'entrée `Dockerfile` désigne le contexte de construction, pas le Dockerfile.
 - `docker/login-action@v1` est une version ancienne (runtime Node déprécié par GitHub).
 - Les permissions du job (`packages: write`) doivent être accordées par l'appelant.
+- Le stockage sur ghcr des images de conteneurs est gratuit d'après la documentation GitHub, qui promet un préavis d'un mois avant tout changement. Si ghcr devenait payant, il suffirait de pointer `cache-from` et `cache-to` vers un registre local.
+- Quand la connexion se fait avec `PAT`, le package de cache est créé au nom du propriétaire du jeton ; la purge, qui utilise `GITHUB_TOKEN`, peut alors manquer de droits (sans bloquer la publication).
 
 > À vérifier : d'après la documentation de `docker/metadata-action`, le suffixe de `flavor` n'est pas appliqué au tag `latest` par défaut (`onlatest=false`) ; plusieurs `target` publiées depuis un même tag écriraient alors toutes `latest`.
