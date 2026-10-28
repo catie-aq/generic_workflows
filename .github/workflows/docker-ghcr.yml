@@ -118,6 +118,19 @@ jobs:
             echo "::set-output name=file::${{ inputs.file }}"
           fi
 
+      # Runners are ephemeral, so without an external cache every build replays all layers.
+      # The cache lives in a separate package (<repo>-buildcache) so that purging its untagged
+      # versions never touches image versions still deployed by digest.
+      - name: Set cache reference
+        id: cache
+        env:
+          TARGET: ${{ inputs.target }}
+        run: |
+          package="${GITHUB_REPOSITORY#*/}"
+          package="${package,,}-buildcache"
+          echo "package=$package" >> "$GITHUB_OUTPUT"
+          echo "ref=${REGISTRY}/${GITHUB_REPOSITORY_OWNER,,}/$package:${TARGET:-default}" >> "$GITHUB_OUTPUT"
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
@@ -133,3 +146,15 @@ jobs:
           target: ${{ inputs.target }}
           build-args: ${{ secrets.build_args }}
           secrets: ${{ secrets.build_secrets }}
+          cache-from: type=registry,ref=${{ steps.cache.outputs.ref }}
+          cache-to: type=registry,ref=${{ steps.cache.outputs.ref }},mode=max,image-manifest=true,oci-mediatypes=true,ignore-error=true
+
+      # Each cache push leaves the previous cache manifest untagged: drop those.
+      - name: Purge untagged cache versions
+        continue-on-error: true
+        uses: actions/delete-package-versions@v5
+        with:
+          package-name: ${{ steps.cache.outputs.package }}
+          package-type: container
+          delete-only-untagged-versions: "true"
+          min-versions-to-keep: 0
