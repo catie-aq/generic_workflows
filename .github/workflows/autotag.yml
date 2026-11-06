@@ -41,7 +41,7 @@ jobs:
       - name: Get current version
         id: get_version
         run: |
-          echo ::set-output name=version::$(${{ inputs.version_cmd }})
+          echo "version=$(${{ inputs.version_cmd }} | tr -d '[:space:]')" >> "$GITHUB_OUTPUT"
       - name: Check version
         id: semver
         uses: catie-aq/generic_workflows/semver@main
